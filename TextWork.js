@@ -1,11 +1,16 @@
 //Because cal event description is url-encoded, gotta clean it up a bit
 function decodeDescription(raw){
 
-  var clean = decodeEntities(decodeURIComponent(raw)).trim()
+  var clean1 = decodeEntities(decodeURIComponent(raw)).trim()
 
-  console.log('decodeDescription: raw: '+raw+' clean:'+clean)
+  // Remove <br> that are not in quotes which are added by google calendar if user hand edits a google calendar json description
+  var clean2 = clean1.replace(/<br>(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
-  return clean
+  // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
+  var clean3 = clean2.replace(/<a href=\"mailto:.+?\" target=\"_blank\">(.+?)<\/a>/g, '$1')
+  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3}, null, '  '))
+
+  return clean3
 }
 
 
