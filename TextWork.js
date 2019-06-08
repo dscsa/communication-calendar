@@ -3,11 +3,12 @@ function decodeDescription(raw){
 
   var clean1 = decodeEntities(decodeURIComponent(raw)).trim()
 
-  // Remove <br> that are not in quotes which are added by google calendar if user hand edits a google calendar json description
-  var clean2 = clean1.replace(/<br>(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
+  // Remove <br> AND \n that are not in quotes which are added by google calendar if user hand edits a google calendar json description
+  var clean2 = clean1.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
   // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
   var clean3 = clean2.replace(/<a href=\"mailto:.+?\" target=\"_blank\">(.+?)<\/a>/g, '$1')
+
   debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3}, null, '  '))
 
   return clean3
@@ -19,9 +20,9 @@ function decodeEntities(encodedString) {
 
   return encodedString.replace(/&nbsp;/g," ")
                       .replace(/&amp;/g,"&")
-                       .replace(/&quot;/g,"\"")
-                       .replace(/&lt;/g,"<")
-                       .replace(/&gt;/g,">")
+                      .replace(/&quot;/g,"\"")
+                      .replace(/&lt;/g,"<")
+                      .replace(/&gt;/g,">")
 
   //This code wasn't working, and the design was starting to confuse me,
   //so I just recoded the regexes that we've actually seen here
