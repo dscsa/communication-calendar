@@ -5,7 +5,7 @@ function processCommArr(str, event_id, calendar_id) {
   try {
     var all_comms = JSON.parse(str)
   } catch (e) {
-    debugEmail('Failure to process a comm-array', e, str)
+    debugEmail('Failure to process a comm-array', JSON.stringify([e, str]))
   }
 
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
@@ -26,7 +26,7 @@ function processCommArr(str, event_id, calendar_id) {
         processFaxObj(obj,cache, event_id, timestamp)
       }
     } catch(e){
-      debugEmail('Failure to process a comm-object', e, obj)
+      debugEmail('Failure to process a comm-object', JSON.stringify([e, str]))
     }
 
   }
