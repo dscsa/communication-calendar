@@ -23,8 +23,8 @@ function doGet(e) {
 
   try{
       phone_num = request.To.slice(2)
-  } catch(e){
-      debugEmail('Got a GET request without a parseable telephone number', JSON.stringify(e))
+  } catch(err){
+      debugEmail('Got a GET request without a parseable telephone number', JSON.stringify([e,err]))
   }
 
 
