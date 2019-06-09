@@ -127,7 +127,7 @@ function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
     var from = ""
     var name = ""
 
-    if(!(obj.from)){
+    if( ! obj.from ){
 
       if(calendar_id == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
         from = SECURE_DEFAULT_FROM
@@ -138,13 +138,13 @@ function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
     } else {
       var raw_from = obj.from.split("<")
       name = raw_from.length  > 1 ? raw_from[0].trim() : ''
-      from = raw_from.length  > 1 ? raw_from[1].trim().replace(">","") : raw_from[0]
+      from = raw_from.length  > 1 ? raw_from[1].trim().replace(">","") : raw_from[0].trim()
 
     }
 
     var aliases = GmailApp.getAliases()
 
-    if(aliases.indexOf(from.trim()) == -1) throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + "<br>Aliases: " + aliases);
+    if(aliases.indexOf(from) == -1) throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + " Aliases: " + aliases);
 
     var options = {} //that will be used in the email itself
     options.from = from

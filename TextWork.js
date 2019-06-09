@@ -7,11 +7,13 @@ function decodeDescription(raw){
   var clean2 = clean1.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
   // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
-  var clean3 = clean2.replace(/<a href=\"mailto:.+?\" target=\"_blank\">(.+?)<\/a>/g, '$1')
+  var clean3 = clean2.replace(/<a href="mailto:.+?" target="_blank">(.+?)<\/a>/g, '$1')
 
-  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3}, null, '  '))
+  var clean4 = clean3.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  return clean3
+  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4}, null, '  '))
+
+  return clean4
 }
 
 
