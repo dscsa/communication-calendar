@@ -116,41 +116,45 @@ function liftCallHold(){
 //Called when sending status update from Twilio
 function doPost(e){
 
-  var cache = CacheService.getScriptCache()
+  try {
 
-  var request = e.parameter
-  var phone_num = request.To.slice(2)
+    var cache = CacheService.getScriptCache()
 
-  var status = request.MessageStatus ? request.MessageStatus : request.CallStatus
-  var tag_code = request.MessageStatus ? "TEXTED" : "CALLED"
+    var request = e.parameter
+    var phone_num = request.To.slice(2)
 
-  if((status == 'delivered') || (status == 'completed')){
+    var status = request.MessageStatus ? request.MessageStatus : request.CallStatus
+    var tag_code = request.MessageStatus ? "TEXTED" : "CALLED"
 
-    markCalendar(phone_num,tag_code,cache)
-    clearCache(phone_num, cache)
+    if((status == 'delivered') || (status == 'completed')){
 
-  } else if(status == 'failed'){
+      markCalendar(phone_num,tag_code,cache)
+      clearCache(phone_num, cache)
 
-    var lock = LockService.getScriptLock()
+    } else if(status == 'failed'){
 
-    try{
-       lock.waitLock(7000) //if we don't have the lock
-    } catch(e) {
-      debugEmail('Script Lock Race Case in doPost','')
+      var lock = LockService.getScriptLock()
+
+      try{
+         lock.waitLock(7000) //if we don't have the lock
+      } catch(e) {
+        debugEmail('Script Lock Race Case in doPost','')
+      }
+
+      var fallbacks = shouldUseFallbacks(phone_num, cache) //this is really all that needs to be locked down
+
+      lock.releaseLock()
+
+      var cal_id  = pullFromCache(STORED_CAL_ID,phone_num, cache)
+      var event_id = pullFromCache(STORED_EVENT_ID,phone_num, cache)
+
+      if(fallbacks != null) processCommArr(fallbacks, event_id,cal_id);
+
     }
-
-    var fallbacks = shouldUseFallbacks(phone_num, cache) //this is really all that needs to be locked down
-
-    lock.releaseLock()
-
-    var cal_id  = pullFromCache(STORED_CAL_ID,phone_num, cache)
-    var event_id = pullFromCache(STORED_EVENT_ID,phone_num, cache)
-
-    if(fallbacks != null) processCommArr(fallbacks, event_id,cal_id);
-
+  }
+  catch (err) {
+    debugEmail('WebApp doPost Error', JSON.stringify([e, err]))
   }
 
-
   return ContentService.createTextOutput("Success!") //Response to Twilio is currently irrelavant
-
 }
