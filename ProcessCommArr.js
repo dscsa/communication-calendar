@@ -15,21 +15,16 @@ function processCommArr(str, event_id, calendar_id) {
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
 
+    if(obj.sms || obj.call){ //a phone communication object
+      processPhoneObject(obj,cache, event_id, calendar_id, timestamp)
 
-      if(obj.sms || obj.call){ //a phone communication object
-        processPhoneObject(obj,cache, event_id, calendar_id, timestamp)
+    } else if(obj.email){ //an email object
+      processEmailObj(obj,cache, event_id, calendar_id, timestamp)
 
-      } else if(obj.email){ //an email object
-        processEmailObj(obj,cache, event_id, calendar_id, timestamp)
-
-      } else if(obj.fax){
-        processFaxObj(obj,cache, event_id, timestamp)
-      }
-
-
+    } else if(obj.fax){
+      processFaxObj(obj,cache, event_id, timestamp)
+    }
   }
-
-
 }
 
 
