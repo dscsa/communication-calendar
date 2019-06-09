@@ -6,7 +6,7 @@ function debugEmail(subject,body){
   if (quota < 200) { //if we're near our quota limit, don't send another email, just log
     return console.log({"issue":'approaching email quota, remaining: ' + quota, "subject":subject,"body":body})
   }
-  
+
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, subject,body)
 }
 
@@ -32,7 +32,7 @@ function wouldSpam(contact_type, addr, body, cache, timestamp){
   if( ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_ERRORS_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
 
   var res = false
-  var prev_contacts = getContactHistory(addr)  || ''
+  var prev_contacts = getContactHistory(addr, cache)  || ''
 
   if(contact_type == '#email#'){
     contact_type = extractTypeOfOutboundEmail(body) //get thet ype of email (shipped, update, notif)
