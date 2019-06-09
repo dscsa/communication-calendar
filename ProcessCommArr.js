@@ -133,13 +133,16 @@ function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
     } else {
       var raw_from = obj.from.split("<")
       name = raw_from.length  > 1 ? raw_from[0].trim() : ''
-      from = raw_from.length  > 1 ? raw_from[1].trim().replace(">","") : raw_from[0].trim()
+      from = raw_from.length  > 1 ? raw_from[1].replace(">","").trim() : raw_from[0].trim()
 
     }
 
     var aliases = GmailApp.getAliases()
 
-    if(aliases.indexOf(from) == -1) throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + " Aliases: " + aliases);
+    if(aliases.indexOf(from) == -1) {
+      debugEmail('missing email alias', encodeURIComponent(from)+' '+encodeURIComponent(aliases.join(',')))
+      throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + " Aliases: " + aliases);
+    }
 
     var options = {} //that will be used in the email itself
     options.from = from
