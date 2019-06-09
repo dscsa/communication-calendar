@@ -15,7 +15,7 @@ function processCommArr(str, event_id, calendar_id) {
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
 
-    try{
+
       if(obj.sms || obj.call){ //a phone communication object
         processPhoneObject(obj,cache, event_id, calendar_id, timestamp)
 
@@ -25,9 +25,7 @@ function processCommArr(str, event_id, calendar_id) {
       } else if(obj.fax){
         processFaxObj(obj,cache, event_id, timestamp)
       }
-    } catch(e){
-      debugEmail('Failure to process a comm-object', JSON.stringify([e, str]))
-    }
+
 
   }
 
@@ -39,22 +37,27 @@ function processCommArr(str, event_id, calendar_id) {
 //All phone communications will go through Twilio's API
 function processPhoneObject(obj,cache, event_id, calendar_id, timestamp){
 
-  if(!(obj.message)) throw new Error("Phone contact object must have a message");
+  try{
 
-  var message_content = obj.message
+    if( ! obj.message) throw new Error("Phone contact object must have a message");
 
-  var fallbacks = obj.fallbacks ? JSON.stringify(obj.fallbacks) : ''
-  var sms_arr = obj.sms ? obj.sms.toString().split(",") : []
-  var call_arr = obj.call ? obj.call.toString().split(",") : []
+    var message_content = obj.message
 
-  //TODO: clean text message (so it can be the same, and processed differently, and don't need to have separate comm-objects)
+    var fallbacks = obj.fallbacks ? JSON.stringify(obj.fallbacks) : ''
+    var sms_arr = obj.sms ? obj.sms.toString().split(",") : []
+    var call_arr = obj.call ? obj.call.toString().split(",") : []
 
-  queuePhone(sms_arr, 'sms', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+    //TODO: clean text message (so it can be the same, and processed differently, and don't need to have separate comm-objects)
 
-  message_content = cleanCallMessage(message_content,cache)
+    queuePhone(sms_arr, 'sms', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
 
-  queuePhone(call_arr, 'call', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+    message_content = cleanCallMessage(message_content,cache)
 
+    queuePhone(call_arr, 'call', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+
+  } catch(e){
+    debugEmail('Failure to process a phone comm-object', JSON.stringify([e, obj]))
+  }
 }
 
 
@@ -110,62 +113,66 @@ function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, 
 //All email communications will go through GmailApp
 function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
 
-  if(!(obj.message)) throw new Error("Email object must have a message");
-  if(!(obj.subject)) throw new Error("Email object must have a subject");
+  try{
 
-  var recipient = obj.email
-  var subject = obj.subject
-  var body = obj.message
+    if( ! obj.message ) throw new Error("Email object must have a message");
+    if( ! obj.subject ) throw new Error("Email object must have a subject");
 
-  if(wouldSpam("#email#",recipient, body, cache, timestamp)) return;  //wouldSpam will handle checking/updating cache & sending an alert email if necessary
+    var recipient = obj.email
+    var subject = obj.subject
+    var body = obj.message
 
-  var from = ""
-  var name = ""
+    if(wouldSpam("#email#",recipient, body, cache, timestamp)) return;  //wouldSpam will handle checking/updating cache & sending an alert email if necessary
 
-  if(!(obj.from)){
+    var from = ""
+    var name = ""
 
-    if(calendar_id == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
-      from = SECURE_DEFAULT_FROM
+    if(!(obj.from)){
+
+      if(calendar_id == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
+        from = SECURE_DEFAULT_FROM
+      } else {
+        from = INSECURE_DEFAULT_FROM
+      }
+
     } else {
-      from = INSECURE_DEFAULT_FROM
+      var raw_from = obj.from.split("<")
+      name = raw_from.length  > 1 ? raw_from[0].trim() : ''
+      from = raw_from.length  > 1 ? raw_from[1].trim().replace(">","") : raw_from[0]
+
     }
 
-  } else {
-    var raw_from = obj.from.split("<")
-    name = raw_from.length  > 1 ? raw_from[0].trim() : ''
-    from = raw_from.length  > 1 ? raw_from[1].trim().replace(">","") : raw_from[0]
+    var aliases = GmailApp.getAliases()
 
-  }
+    if(aliases.indexOf(from.trim()) == -1) throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + "<br>Aliases: " + aliases);
 
-  var aliases = GmailApp.getAliases()
+    var options = {} //that will be used in the email itself
+    options.from = from
+    if(name) options.name = name
 
-  if(aliases.indexOf(from.trim()) == -1) throw new Error("The from address here isnt set up as an alias of the sending account. Given: " + from + "<br>Aliases: " + aliases);
+    if(obj.cc) options.cc = obj.cc;
+    if(obj.bcc) options.bcc = obj.bcc;
 
-  var options = {} //that will be used in the email itself
-  options.from = from
-  if(name) options.name = name
+    options.htmlBody = body
 
-  if(obj.cc) options.cc = obj.cc;
-  if(obj.bcc) options.bcc = obj.bcc;
+    var attachments = obj.attachments ? obj.attachments.toString().split(",") : []
 
-  options.htmlBody = body
-
-  var attachments = obj.attachments ? obj.attachments.toString().split(",") : []
-
-  if(attachments.length > 0){
-    var attach_arr = []
-    for(var i = 0; i < attachments.length; i++){
-      Logger.log(attachments[i].trim())
-      attach_arr.push(DriveApp.getFileById(attachments[i].trim()).getBlob()) //needs to be an array of blobs
+    if(attachments.length > 0){
+      var attach_arr = []
+      for(var i = 0; i < attachments.length; i++){
+        Logger.log(attachments[i].trim())
+        attach_arr.push(DriveApp.getFileById(attachments[i].trim()).getBlob()) //needs to be an array of blobs
+      }
+      options.attachments = attach_arr
     }
-    options.attachments = attach_arr
+
+    if(!LIVE_MODE) recipient = PRODUCTION_ERRORS_EMAIL;
+
+    GmailApp.sendEmail(recipient, subject, '', options)
+
+    var event = CalendarApp.getCalendarById(calendar_id).getEventById(event_id)
+    event.setTitle("EMAILED - " + event.getTitle())
+  } catch(e){
+    debugEmail('Failure to process a email comm-object', JSON.stringify([e, obj]))
   }
-
-  if(!LIVE_MODE) recipient = PRODUCTION_ERRORS_EMAIL;
-
-  GmailApp.sendEmail(recipient, subject, '', options)
-
-  var event = CalendarApp.getCalendarById(calendar_id).getEventById(event_id)
-  event.setTitle("EMAILED - " + event.getTitle())
-
 }
