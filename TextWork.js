@@ -1,19 +1,28 @@
 //Because cal event description is url-encoded, gotta clean it up a bit
 function decodeDescription(raw){
 
-  var clean1 = decodeEntities(decodeURIComponent(raw)).trim()
+  raw = raw.trim()
+
+  try {
+    var clean1 = decodeURIComponent(raw)
+  } catch (e) {
+    debugEmail('decodeDescription decodeURI Error', JSON.stringify([raw, e])) 
+    var clean1 = raw
+  }
+
+  var clean2 = decodeEntities(clean1)
 
   // Remove <br> AND \n that are not in quotes which are added by google calendar if user hand edits a google calendar json description
-  var clean2 = clean1.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
+  var clean3 = clean2.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
   // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
-  var clean3 = clean2.replace(/<a href="mailto:.+?" target="_blank">(.+?)<\/a>/g, '$1')
+  var clean4 = clean3.replace(/<a href="mailto:.+?" target="_blank">(.+?)<\/a>/g, '$1')
 
-  var clean4 = clean3.replace(/<u><\/u>/g, '') //not sure why good inserts these
+  var clean5 = clean4.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4}, null, '  '))
+  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
 
-  return clean4
+  return clean5
 }
 
 
