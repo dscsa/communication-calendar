@@ -64,7 +64,12 @@ function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, 
   for(var n = 0; n < arr.length; n++){ //go through all numbers
 
     var phone_num = arr[n].replace(/\D/g,'') //remove non-digits
-
+    
+    if(phone_num.trim().length == 0){ //don't try to process empty phone numbers --> stop us cascading with errors from shopping sheet
+      debugEmail('Comm-Obj w/o a Phone #', "Event ID: " + event_id)
+      continue;
+    }
+    
     if(((code == 'call') && holdCall(phone_num,cache)) ||
        wouldSpam("#" + code + "#",phone_num, message, cache, timestamp)) continue;  //wouldSpam will handle checking/updating cache & sending an alert email if necessary
 
@@ -109,11 +114,17 @@ function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, 
 function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
 
   try{
-
+    if( ! obj.email ) throw new Error("Email object must have a recipient");
     if( ! obj.message ) throw new Error("Email object must have a message");
     if( ! obj.subject ) throw new Error("Email object must have a subject");
 
     var recipient = obj.email
+    
+    if(recipient.toString().trim().length == 0){ //dont try to send email if theres no recipient
+      debugEmail('Email Comm-Obj w/o Recipient', "Event ID: " + event_id)
+      return
+    }
+    
     var subject = obj.subject
     var body = obj.message
 
@@ -170,7 +181,9 @@ function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
 
     var event = CalendarApp.getCalendarById(calendar_id).getEventById(event_id)
     event.setTitle("EMAILED - " + event.getTitle())
+ 
   } catch(e){
     debugEmail('Failure to process a email comm-object', JSON.stringify([e, obj]))
   }
+
 }

@@ -43,7 +43,7 @@ function compUrl(){
 
 //Specify the start time of a test event here, use for debugging
 function runOnTestEvent(){
-  var date_back = new Date('2019-06-05T15:49:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-06-11T13:28:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back)
 }
 

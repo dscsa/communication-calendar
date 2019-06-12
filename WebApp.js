@@ -131,7 +131,7 @@ function doPost(e){
       markCalendar(phone_num,tag_code,cache)
       clearCache(phone_num, cache)
 
-    } else if(status == 'failed'){
+    } else if((status == 'failed') || (status == 'undelivered')){
 
       var lock = LockService.getScriptLock()
 

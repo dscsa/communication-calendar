@@ -6,12 +6,8 @@ function clearCache(phone_num, cache){
 
 function testNewCache(){
 
-  raw_phone = raw_phone[0].replace(/\D/g,'')
-  var calltext = "hello hi there"
-  Logger.log(CacheService.getScriptCache().get(raw_phone))
-  
-  updateCache(0,raw_phone,calltext,CacheService.getScriptCache())  
-  
+ var str = '--'
+ Logger.log(str.replace(/\D/g,''))
 }
 
 function clearCache(){
@@ -19,7 +15,7 @@ function clearCache(){
 }
 
 function checkCache(){
-  var num = "sd"
+  var num = "7066330218"
   Logger.log(CacheService.getScriptCache().get(num))
   //Logger.log(pullFromCache(1,num, CacheService.getScriptCache()))
 }
