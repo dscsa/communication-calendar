@@ -58,6 +58,12 @@ function decodeEntities(encodedString) {
     })*/
 }
 
+function cleanTextMessage(raw,cache){
+  
+  var clean = raw.replace(/<.*?>/g,' ') //remove any html style tagging, or twiml
+  
+  return clean
+}
 
 
 //when handling phone calls, need to take the text and process into appropriate TwiML befoer sending
@@ -68,6 +74,7 @@ function cleanCallMessage(raw, cache) {
         .replace(/<Pause(.*?)>/ig,"</Say><Pause$1><Say>")
         .replace(/<Pause([^\/>]*?)>/ig,"<Pause$1/>")
         .replace(/<Say><\/Say>/g, '')
+        .replace(/<u>/g,'').replace(/<\/u>/g,'') //todo: other style tags we need to remove?
 
   clean = handlePlayTag(clean,cache)
 

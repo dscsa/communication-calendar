@@ -43,12 +43,14 @@ function processPhoneObject(obj,cache, event_id, calendar_id, timestamp){
     var call_arr = obj.call ? obj.call.toString().split(",") : []
 
     //TODO: clean text message (so it can be the same, and processed differently, and don't need to have separate comm-objects)
+    
+    var text_message_content = cleanTextMessage(message_content,cache)
+    
+    queuePhone(sms_arr, 'sms', text_message_content, fallbacks, cache, event_id, calendar_id, timestamp)
 
-    queuePhone(sms_arr, 'sms', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+    var call_message_content = cleanCallMessage(message_content,cache)
 
-    message_content = cleanCallMessage(message_content,cache)
-
-    queuePhone(call_arr, 'call', message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+    queuePhone(call_arr, 'call', call_message_content, fallbacks, cache, event_id, calendar_id, timestamp)
 
   } catch(e){
     debugEmail('Failure to process a phone comm-object', JSON.stringify([e, obj]))
