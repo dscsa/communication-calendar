@@ -44,6 +44,11 @@ function pullFromCache(code,phone_num, cache){
 
 
 
+function clearCache(phone_num, cache){
+  cache.remove(phone_num)
+}
+
+
 //For spamming, just a little abstraction over the tags here
 function getContactHistory(addr,cache){
   return cache.get(addr + "-HISTORY")

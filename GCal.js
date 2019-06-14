@@ -28,6 +28,7 @@ function getCalEvents(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
+    console.log(title)
     if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
@@ -54,6 +55,7 @@ function shiftEvents(events){
 
     start.setHours(LIVE_SOD)
     start.setMinutes(0)
+    start.setSeconds(0)
 
     event.setTime(start, new Date(start.getTime() + (60 * 1000)))
 

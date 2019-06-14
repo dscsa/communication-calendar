@@ -19,7 +19,6 @@ function main(){
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
 
     processEvents(SECURE_CAL_ID, oneMinuteBack)
-    //processEvents(TEST_CAL_ID,oneMinuteBack) 
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {
@@ -42,7 +41,7 @@ function compUrl(){
 
 
 //Specify the start time of a test event here, use for debugging
-function runOnTestEvent(){
+function testMain(){
   var date_back = new Date('2019-06-11T13:28:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back)
 }

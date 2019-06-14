@@ -1,8 +1,7 @@
 
-function clearCache(phone_num, cache){
-  cache.remove(phone_num)
+function sleepme(){
+  Utilities.sleep(10000)
 }
-
 
 function testNewCache(){
 

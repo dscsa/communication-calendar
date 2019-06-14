@@ -27,7 +27,7 @@ function doGet(e) {
       debugEmail('Got a GET request without a parseable telephone number', JSON.stringify([e,err]))
   }
 
-
+  
   if(request.ErrorCode){ //this means the GET request is because of a failed execution of a call
 
     twiML = getCustomErrorMessage() //return an error we can use
@@ -115,7 +115,7 @@ function liftCallHold(){
 
 //Called when sending status update from Twilio
 function doPost(e){
-
+    
   try {
 
     var cache = CacheService.getScriptCache()
@@ -138,7 +138,7 @@ function doPost(e){
       try{
          lock.waitLock(7000) //if we don't have the lock
       } catch(e) {
-        debugEmail('Script Lock Race Case in doPost','')
+        debugEmail('Script Lock Race Case in doPost',phone_num)
       }
 
       var fallbacks = shouldUseFallbacks(phone_num, cache) //this is really all that needs to be locked down
@@ -155,6 +155,6 @@ function doPost(e){
   catch (err) {
     debugEmail('WebApp doPost Error', JSON.stringify([e, err]))
   }
-
+  
   return ContentService.createTextOutput("Success!") //Response to Twilio is currently irrelavant
 }
