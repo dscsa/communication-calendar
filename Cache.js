@@ -9,18 +9,23 @@
 //3 for fallbacks
 //4 for associated_phone_nums  --> comma separated
 
+
+
+//TODO:
+//0 for call text
+//1 for sid
+
 //Global variables 
 var STORED_TWIML = 0
-var STORED_CAL_ID = 1
-var STORED_EVENT_ID = 2
-var STORED_FALLBACKS = 3
-var STORED_LINKED_NUMBERS = 4
+var STORED_MESSAGE_SID = 1
+var STORED_CALL_SID = 2
+
 
 
 function updateCache(code,phone_num,content,cache){
   var cache_arr = cache.get(phone_num)
   
-  cache_arr = cache_arr == null ? ['','','','',''] : cache_arr.split("#|#")
+  cache_arr = cache_arr == null ? ['','',''] : cache_arr.split("#|#")
   
   cache_arr[code] = content
   
@@ -36,7 +41,7 @@ function updateCache(code,phone_num,content,cache){
 function pullFromCache(code,phone_num, cache){
   var cache_arr = cache.get(phone_num)
   
-  cache_arr = cache_arr == null ? ['','','','',''] : cache_arr.split("#|#")
+  cache_arr = cache_arr == null ? ['','',''] : cache_arr.split("#|#")
   
   return cache_arr[code]  
   

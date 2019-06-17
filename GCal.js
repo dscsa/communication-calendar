@@ -14,10 +14,9 @@ function markCalendar(phone_num,tag, cache){
 
 
 
-//Gets all Calendar events that have started since the given starttime
-//For regular functionality, startTimeDate = now - 60 seconds
-//But for debugging, can be specified to highlight specific time for test event
-function getCalEvents(calendar_id, startTimeDate){
+
+//Get events that haven't yet been touched, and will need to be queued up
+function getEventsToQueue(calendar_id, startTimeDate){
 
   var calendar = CalendarApp.getCalendarById(calendar_id)
   var now = new Date();
@@ -28,8 +27,7 @@ function getCalEvents(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    console.log(title)
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")) continue; //don't reprocess a tagged event
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED") || ~ title.indexOf("QUEUED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
 
@@ -37,6 +35,27 @@ function getCalEvents(calendar_id, startTimeDate){
 
 }
 
+
+//Get events that have been queued and either need a fallback processed,
+//or they need to be tagged as done
+function getQueuedEvents(calendar_id, startTimeDate){
+
+  var calendar = CalendarApp.getCalendarById(calendar_id)
+  var now = new Date();
+
+  var raw_events = calendar.getEvents(startTimeDate, now); //gets all events that OCCURED between startimedate and now
+
+  var res = []
+
+  for(var i = 0; i < raw_events.length; i++){
+    var title = raw_events[i].getTitle()
+    if( !(~ title.indexOf('QUEUED'))) continue;
+    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i])
+  }
+
+  return res
+
+}
 
 
 

@@ -1,12 +1,8 @@
 //Call on every CalEvent description
 //Also, call from doPost with the fallbacks array string
-function processCommArr(str, event_id, calendar_id) {
+function processCommArr(all_comms, event, is_fallback) {
 
-  try {
-    var all_comms = JSON.parse(str)
-  } catch (e) {
-    return debugEmail('Failure to process a comm-array', JSON.stringify([e, str]))
-  }
+  
 
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
 
@@ -16,13 +12,13 @@ function processCommArr(str, event_id, calendar_id) {
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
 
     if(obj.sms || obj.call){ //a phone communication object
-      processPhoneObject(obj,cache, event_id, calendar_id, timestamp)
+      processPhoneObject(obj,cache, event, timestamp, is_fallback)
 
     } else if(obj.email){ //an email object
-      processEmailObj(obj,cache, event_id, calendar_id, timestamp)
+      processEmailObj(obj,cache, event, timestamp)
 
     } else if(obj.fax){
-      processFaxObj(obj,cache, event_id, timestamp)
+      processFaxObj(obj,cache, event, timestamp)
     }
   }
 }
@@ -30,7 +26,7 @@ function processCommArr(str, event_id, calendar_id) {
 
 
 //All phone communications will go through Twilio's API
-function processPhoneObject(obj,cache, event_id, calendar_id, timestamp){
+function processPhoneObject(obj,cache, event, timestamp, is_fallback){
 
   try{
 
@@ -46,12 +42,12 @@ function processPhoneObject(obj,cache, event_id, calendar_id, timestamp){
     
     var text_message_content = cleanTextMessage(message_content,cache)
     
-    queuePhone(sms_arr, 'sms', text_message_content, fallbacks, cache, event_id, calendar_id, timestamp)
+    queuePhone(sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
 
     var call_message_content = cleanCallMessage(message_content,cache)
 
-    queuePhone(call_arr, 'call', call_message_content, fallbacks, cache, event_id, calendar_id, timestamp)
-
+    queuePhone(call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
+        
   } catch(e){
     debugEmail('Failure to process a phone comm-object', JSON.stringify([e, obj]))
   }
@@ -59,7 +55,7 @@ function processPhoneObject(obj,cache, event_id, calendar_id, timestamp){
 
 
 //Manages sending requests to Twilio, lining up the caching required to catch callbacks later
-function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, timestamp){
+function queuePhone(arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
 
   var phone_num_arr = [] //use this to store all sids in one object, and create a linked bunch of caching values, that way we only go to fallbacks if all of them fail
 
@@ -88,24 +84,25 @@ function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, 
       updateCache(STORED_TWIML,phone_num,callText,cache) //need to cache the callText so the webApp can serve it up in their GET request
       response = sendCall(phone_num, cache)
 
-      if(response == null) continue; //don't do anything more if its null, that means we're on hold
     }
 
 
     if(response.getResponseCode() != 201){
-      debugEmail('Failed request to Twilio', 'Failed to send a request to Twilio\n\n' + phone_num + '\n' + calendar_id + "|" + event_id + '\n' + response.getResponseCode() + '\n' + response.getContentText()) //For now, let's see what parts actually give us errors, and which ones
+      return debugEmail('Failed request to Twilio', 'Failed to send a request to Twilio\n\n' + phone_num + '\n' + '\n' + response.getResponseCode() + '\n' + response.getContentText()) //For now, let's see what parts actually give us errors, and which ones
     } else {
       res = JSON.parse(response.getContentText())
     }
+    
+    var title_tag = is_fallback ? 'QUEUED-FALL-' : 'QUEUED-'
+    title_tag += code + ' '
 
-    updateCache(STORED_CAL_ID,phone_num,calendar_id,cache)
-    updateCache(STORED_EVENT_ID,phone_num,event_id,cache)
-    if(fallback_str.length > 0) updateCache(STORED_FALLBACKS,phone_num,fallback_str,cache);
-    phone_num_arr.push(phone_num)
+    event.setTitle(title_tag + event.getTitle())
+    
+    var update_code = code == 'sms' ? STORED_MESSAGE_SID : STORED_CALL_SID
+    updateCache(update_code,phone_num,res.sid,cache)
 
+    
   }
-  buildConnectedCaches(phone_num_arr,cache)
-
 }
 
 
@@ -113,7 +110,7 @@ function queuePhone(arr,code,message,fallback_str,cache, event_id, calendar_id, 
 
 
 //All email communications will go through GmailApp
-function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
+function processEmailObj(obj, cache, event, timestamp){
 
   try{
     if( ! obj.email ) throw new Error("Email object must have a recipient");
@@ -181,8 +178,7 @@ function processEmailObj(obj, cache, event_id, calendar_id, timestamp){
 
     GmailApp.sendEmail(recipient, subject, '', options)
 
-    var event = CalendarApp.getCalendarById(calendar_id).getEventById(event_id)
-    event.setTitle("EMAILED - " + event.getTitle())
+    event.setTitle("EMAILED " + event.getTitle())
  
   } catch(e){
     debugEmail('Failure to process a email comm-object', JSON.stringify([e, obj]))

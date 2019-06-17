@@ -12,8 +12,7 @@ function testWebAppUrl() {
 
 
 
-//Called by Twilio to fetch TwiML
-//And, if there are errors, it calls here again for a custom error message
+//Called by Twilio to fetch TwiML or report errors in handling TwiML / making calls
 //Don't put in emails or the link will require authorization
 function doGet(e) {
 
@@ -91,6 +90,7 @@ function testHold(){
   Logger.log(CacheService.getScriptCache().get('CALL-HOLD'))
 }
 
+
 //Check if there is currently a hold on calls
 function holdCall(phone_num,cache){
 
@@ -113,9 +113,12 @@ function liftCallHold(){
 
 
 
-//Called when sending status update from Twilio
+//Should be depracated and never called
 function doPost(e){
-    
+  
+  return ContentService.createTextOutput("Called with post, nothing is done.")
+
+  
   try {
 
     var cache = CacheService.getScriptCache()

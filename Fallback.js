@@ -1,3 +1,7 @@
+//deprecated
+
+
+//
 //Check if should process fallbacks for given sid
 //two scenarios
 //the sid was the only one for a comm-obj, in which case use fallbacks if there are any

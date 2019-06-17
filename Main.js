@@ -17,8 +17,8 @@ function main(){
   try {
     var now = new Date();
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
-
-    processEvents(SECURE_CAL_ID, oneMinuteBack)
+    var threeMinutesBack = new Date(now.getTime() - (3 * 60 * 1000));
+    processEvents(SECURE_CAL_ID, oneMinuteBack,threeMinutesBack)
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {
@@ -35,40 +35,68 @@ function main(){
 }
 
 
-//test test
-function compUrl(){
-  Logger.log(ScriptApp.getService().getUrl())  
-}
-
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
   var date_back = new Date('2019-06-11T13:28:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
-  processEvents(TEST_CAL_ID,date_back)
+  processEvents(TEST_CAL_ID,date_back,date_back)
 }
 
 
 //Looks to one of the calendars under this account to find events that need processing
 //set up with this api so that it can be more easy to test
 //by having a consistent startTime
-function processEvents(calendar_id, startTimeDate){
+function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
 
-  var events = getCalEvents(calendar_id, startTimeDate)
+  var events_to_queue = getEventsToQueue(calendar_id, timeToQueue)
+  var queued_events = getQueuedEvents(calendar_id,timeAlreadyQueued)
+  var cache = CacheService.getScriptCache()
   
   if(!inLiveHours()){
-    shiftEvents(events)
+    shiftEvents(events_to_queue)
+    shiftEvents(queued_events) //todo:combine into one call
     return
   }
   
-  for(var i = 0; i < events.length; i++){
+  //Go through events that need to be 'queued'
   
-    var location = events[i].getLocation()
-    var description = events[i].getDescription()
-    var title = events[i].getTitle() 
-
+  for(var i = 0; i < events_to_queue.length; i++){
+  
+    var description = events_to_queue[i].getDescription()
     description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
 
-    processCommArr(description, events[i].getId(), calendar_id)
+    var comm_arr = {}
+    
+    try {
+      comm_arr = JSON.parse(description)
+    } catch (e) {
+      debugEmail('Failure to process a comm-array', JSON.stringify([e, description]))
+      continue
+    }
+    
+    processCommArr(comm_arr, events_to_queue[i], false)
+    
+  }
+  
+  //Go through events that have been 'qeueud' and either tag or processfallback
+  
+  for(var i = 0; i < queued_events.length; i++){
+  
+    var description = queued_events[i].getDescription()
+    var title = queued_events[i].getTitle()
+    
+    description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
+
+    var comm_arr = {}
+    try {
+      comm_arr = JSON.parse(description)
+    } catch (e) {
+      debugEmail('Failure to process a comm-array', JSON.stringify([e, description]))
+      continue
+    }
+    
+    var fallback_arr = processQueuedEvent(comm_arr, title, queued_events[i], cache)
+    if(fallback_arr.length > 0) processCommArr(fallback_arr, queued_events[i], true)
     
   }
   
