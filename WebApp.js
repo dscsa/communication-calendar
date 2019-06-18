@@ -3,11 +3,8 @@
 //Seemed that sometimes the URL returned from .getUrl didn't quite work with that tag.
 //Most likely seems related to general frailty of webApp. For now, works, but worth monitoring
 function getWebAppUrl(){
+  //TODO: how can this be dynamic?
   return WEB_APP_URL //ScriptApp.getService().getUrl().replace("/a/sirum.org","").replace("exec", "dev")
-}
-
-function testWebAppUrl() {
-  Logger.log(getWebAppUrl())
 }
 
 
@@ -82,13 +79,18 @@ function handleTwilioError(phone_num,error_code){
 }
 
 
+
 function putHoldOnCalls(){
   CacheService.getScriptCache().put('CALL-HOLD', true, 21600)
 }
 
+
+
 function testHold(){
   Logger.log(CacheService.getScriptCache().get('CALL-HOLD'))
 }
+
+
 
 
 //Check if there is currently a hold on calls
@@ -103,61 +105,4 @@ function holdCall(phone_num,cache){
 //This function is only called manually by someone after they've fixed whatever issue was causing the hold in the first place
 function liftCallHold(){
   CacheService.getScriptCache().remove('CALL-HOLD')
-}
-
-
-
-
-
-//--------------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-//Should be depracated and never called
-function doPost(e){
-  
-  return ContentService.createTextOutput("Called with post, nothing is done.")
-
-  
-  try {
-
-    var cache = CacheService.getScriptCache()
-
-    var request = e.parameter
-    var phone_num = request.To.slice(2)
-
-    var status = request.MessageStatus ? request.MessageStatus : request.CallStatus
-    var tag_code = request.MessageStatus ? "TEXTED" : "CALLED"
-
-    if((status == 'delivered') || (status == 'completed')){
-
-      markCalendar(phone_num,tag_code,cache)
-      clearCache(phone_num, cache)
-
-    } else if((status == 'failed') || (status == 'undelivered')){
-
-      var lock = LockService.getScriptLock()
-
-      try{
-         lock.waitLock(7000) //if we don't have the lock
-      } catch(e) {
-        debugEmail('Script Lock Race Case in doPost',phone_num)
-      }
-
-      var fallbacks = shouldUseFallbacks(phone_num, cache) //this is really all that needs to be locked down
-
-      lock.releaseLock()
-
-      var cal_id  = pullFromCache(STORED_CAL_ID,phone_num, cache)
-      var event_id = pullFromCache(STORED_EVENT_ID,phone_num, cache)
-
-      if(fallbacks != null) processCommArr(fallbacks, event_id,cal_id);
-
-    }
-  }
-  catch (err) {
-    debugEmail('WebApp doPost Error', JSON.stringify([e, err]))
-  }
-  
-  return ContentService.createTextOutput("Success!") //Response to Twilio is currently irrelavant
 }

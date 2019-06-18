@@ -1,12 +1,10 @@
 //Call on every CalEvent description
 //Also, call from doPost with the fallbacks array string
-function processCommArr(all_comms, event, is_fallback) {
+function processCommArr(all_comms, event, is_fallback, cache) {
 
   
 
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
-
-  var cache = CacheService.getScriptCache()
 
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other

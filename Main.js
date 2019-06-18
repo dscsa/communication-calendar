@@ -1,5 +1,3 @@
-//TODO: Adjust SOD and EOD variables back to business hours before turning live on
-
 //Regularly triggered main function that handles integration 
 //between Calendar and Twilio
 function main(){
@@ -15,10 +13,12 @@ function main(){
   Logger.log("Running Main")
 
   try {
+    
     var now = new Date();
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
-    var threeMinutesBack = new Date(now.getTime() - (3 * 60 * 1000));
-    processEvents(SECURE_CAL_ID, oneMinuteBack,threeMinutesBack)
+    var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
+    
+    processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {
@@ -43,23 +43,34 @@ function testMain(){
 }
 
 
+
 //Looks to one of the calendars under this account to find events that need processing
-//set up with this api so that it can be more easy to test
+//and those that need to be checked
+//set up with this api (of having the times as parameterrs) so that it can be more easy to test
 //by having a consistent startTime
 function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
 
   var events_to_queue = getEventsToQueue(calendar_id, timeToQueue)
   var queued_events = getQueuedEvents(calendar_id,timeAlreadyQueued)
+  
   var cache = CacheService.getScriptCache()
   
   if(!inLiveHours()){
-    shiftEvents(events_to_queue)
-    shiftEvents(queued_events) //todo:combine into one call
+    var all_events = events_to_queue.concat(queued_events)
+    shiftEvents(all_events)
     return
   }
   
-  //Go through events that need to be 'queued'
+  queueEvents(events_to_queue, cache)
+  checkEvents(queued_events, cache)
   
+}
+
+
+
+
+//Go through events that need to be 'queued'
+function queueEvents(events_to_queue, cache){
   for(var i = 0; i < events_to_queue.length; i++){
   
     var description = events_to_queue[i].getDescription()
@@ -74,11 +85,15 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
       continue
     }
     
-    processCommArr(comm_arr, events_to_queue[i], false)
+    processCommArr(comm_arr, events_to_queue[i], false, cache)
     
   }
-  
-  //Go through events that have been 'qeueud' and either tag or processfallback
+}
+
+
+
+//Go through events that have been 'qeueud' and either tag or processfallback
+function checkEvents(queued_events, cache){
   
   for(var i = 0; i < queued_events.length; i++){
   
@@ -88,6 +103,7 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
     description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
 
     var comm_arr = {}
+    
     try {
       comm_arr = JSON.parse(description)
     } catch (e) {
@@ -96,12 +112,10 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
     }
     
     var fallback_arr = processQueuedEvent(comm_arr, title, queued_events[i], cache)
-    if(fallback_arr.length > 0) processCommArr(fallback_arr, queued_events[i], true)
+    if(fallback_arr.length > 0) processCommArr(fallback_arr, queued_events[i], true, cache)
     
   }
-  
 }
-
 
 
 

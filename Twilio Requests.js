@@ -64,7 +64,10 @@ function fetchResource(sid,code){
   var resource = code=='sms'? 'Messages' : 'Calls'
   var url = 'https://api.twilio.com/2010-04-01/Accounts/' + TWILIO_ID + '/' + resource + '/' + sid + '.json'
   
-  var options = {}
+  var options = {
+    "muteHttpExceptions" : true
+  };
+
   options.headers = {
     "Authorization" : "Basic " + Utilities.base64Encode(TWILIO_ID + ":" + TWILIO_TOKEN)
   }

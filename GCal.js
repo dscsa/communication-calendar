@@ -1,4 +1,3 @@
-//Called from WebApp callback.
 //Looks to the cache through the phone_num to find eventID & calID that corresponds
 //and uses the calendar event id to tag that event appropriately
 function markCalendar(phone_num,tag, cache){
