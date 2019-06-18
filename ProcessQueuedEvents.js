@@ -77,7 +77,6 @@ function handleTwilioObjects(index,obj, event,cache){
       
       var status = twilio_res.status
 
-      
       if((status == 'delivered') || (status == 'completed')){ //only handled on the first number --> we only need one
         
         markSuccess(event,index,code)
