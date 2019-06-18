@@ -9,7 +9,7 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
 
     if(obj.sms || obj.call){ //a phone communication object
-      processPhoneObject(i,parent_index,obj,cache, event, timestamp, is_fallback, parent_index)
+      processPhoneObject(i,parent_index,obj,cache, event, timestamp, is_fallback)
 
     } else if(obj.email){ //an email object
       processEmailObj(obj,cache, event, timestamp)
