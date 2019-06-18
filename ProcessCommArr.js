@@ -50,6 +50,7 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
 }
 
 
+
 //Manages sending requests to Twilio, lining up the caching required to catch callbacks later
 function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
 
@@ -76,12 +77,10 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       
     } else if(code == 'call'){
       
-      var callText = message
-      updateCache(STORED_TWIML,phone_num,callText,cache) //need to cache the callText so the webApp can serve it up in their GET request
+      updateCache(STORED_TWIML,phone_num,message,cache) //need to cache the callText so the webApp can serve it up in their GET request
       response = sendCall(phone_num)
 
     }
-
 
     if(response.getResponseCode() != 201){
       return debugEmail('Failed request to Twilio', 'Failed to send a request to Twilio\n\n' + phone_num + '\n' + '\n' + response.getResponseCode() + '\n' + response.getContentText()) //For now, let's see what parts actually give us errors, and which ones
@@ -89,9 +88,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       res = JSON.parse(response.getContentText())
     }
     
-    var title_tag = 'QUEUED-'
-    title_tag += is_fallback ? parent_index + '-' + index : index
-    event.setTitle(title_tag + ' ' + event.getTitle())
+    markQueued(event,is_fallback,parent_index,index)
     
     var update_code = code == 'sms' ? STORED_MESSAGE_SID : STORED_CALL_SID
     updateCache(update_code,phone_num,res.sid,cache)

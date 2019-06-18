@@ -14,6 +14,13 @@ function markSuccess(event,index,code){
 }
 
 
+    
+function markQueued(event,is_fallback,parent_index,index){
+    var title_tag = 'QUEUED-'
+    title_tag += is_fallback ? parent_index + '-' + index : index
+    event.setTitle(title_tag + ' ' + event.getTitle())
+}
+
 
 
 //Get events that haven't yet been touched, and will need to be queued up

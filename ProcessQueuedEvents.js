@@ -19,7 +19,7 @@ function handleInitialQueues(comm_arr, title,event,cache){
     
   var initial_queues = extractQueuedTags(title) //indexes within comm_arr that need to be checked
 
-    for(var i = 0; i < initial_queues.length; i++){
+  for(var i = 0; i < initial_queues.length; i++){
     
       var index = initial_queues[i]
       
@@ -55,6 +55,7 @@ function handleFallbacks(comm_arr, title,event,cache){
 //Handles taking an object, and making appropriate calls to Twilio
 //Checking results, and tagging appropriately and/or calling processCommArr on fallbacks
 function handleTwilioObjects(index,obj, event,cache){
+    
     var code = obj.sms ? 'sms' : 'call'
     
     var phone_nums = obj[code].split(",")
@@ -64,7 +65,7 @@ function handleTwilioObjects(index,obj, event,cache){
       var num = phone_nums[n].replace(/\D/g,'').trim()
       var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
       
-      var raw_res = fetchResource(sid,code) //TODO: check twilio_res a little more thoroughly here
+      var raw_res = fetchResource(sid,code)
       
       var twilio_res = null
 
@@ -82,39 +83,11 @@ function handleTwilioObjects(index,obj, event,cache){
         markSuccess(event,index,code)
         break;
         
-       } else if((status == 'failed') || (status == 'undelivered')){
+      } else if((status == 'failed') || (status == 'undelivered')){
         
         markFailed(event,index)
         if((n == phone_nums.length -1) && (obj.fallbacks)) processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
          
       }
     }
-}
-
-
-
-
-
-function extractFallbackTags(str){
-  var rx = /QUEUED-(\d*?-\d*?) /g
-  return getAllMatches(rx,str)
-}
-
-
-
-function extractQueuedTags(str){
-  var rx = /QUEUED-(\d*?) /g
-  return getAllMatches(rx,str)
-}
-
-
-
-function getAllMatches(rx,str){
-  var arr = rx.exec(str)
-  var res = []
-  while(arr != null){
-    res.push(arr[1])
-    arr = rx.exec(str)
-  }
-  return res
 }

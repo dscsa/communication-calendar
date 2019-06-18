@@ -160,3 +160,28 @@ function eventString(events) {
     return s+event.getStartTime()+': '+event.getTitle()+', '+event.getDescription()+'; '
   }
 }
+
+
+
+//For recognizng from the title, what part of an event should be checked -----
+function extractFallbackTags(str){
+  var rx = /QUEUED-(\d*?-\d*?) /g
+  return getAllMatches(rx,str)
+}
+
+
+function extractQueuedTags(str){
+  var rx = /QUEUED-(\d*?) /g
+  return getAllMatches(rx,str)
+}
+
+function getAllMatches(rx,str){
+  var arr = rx.exec(str)
+  var res = []
+  while(arr != null){
+    res.push(arr[1])
+    arr = rx.exec(str)
+  }
+  return res
+}
+//------------------------
