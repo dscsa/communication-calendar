@@ -1,5 +1,5 @@
 //Build request to Twilio Call service to place an outbound call
-function sendCall(to, cache){
+function sendCall(to){
 
   if(!LIVE_MODE) to = PRODUCTION_SPAMPROOF_PHONE;
 
@@ -59,6 +59,7 @@ function sendSms(to, body) {
 
 
 //Given an sid, will ping Twilio for a status update on the resource
+//code can be 'sms' or 'call', so we know which resource to look at 
 function fetchResource(sid,code){
   
   var resource = code=='sms'? 'Messages' : 'Calls'
@@ -73,5 +74,5 @@ function fetchResource(sid,code){
     "Authorization" : "Basic " + Utilities.base64Encode(TWILIO_ID + ":" + TWILIO_TOKEN)
   }
   
-  return JSON.parse(UrlFetchApp.fetch(url, options).getContentText())
+  return UrlFetchApp.fetch(url, options)
 }

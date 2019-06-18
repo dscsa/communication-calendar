@@ -1,5 +1,3 @@
-//-------------------------------------------------------------------------------------------------------------------
-
 //Seemed that sometimes the URL returned from .getUrl didn't quite work with that tag.
 //Most likely seems related to general frailty of webApp. For now, works, but worth monitoring
 function getWebAppUrl(){

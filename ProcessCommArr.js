@@ -78,7 +78,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       
       var callText = message
       updateCache(STORED_TWIML,phone_num,callText,cache) //need to cache the callText so the webApp can serve it up in their GET request
-      response = sendCall(phone_num, cache)
+      response = sendCall(phone_num)
 
     }
 
