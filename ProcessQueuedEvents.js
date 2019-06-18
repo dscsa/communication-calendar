@@ -8,7 +8,7 @@ function processQueuedEvent(comm_arr, event,cache){
   
   handleInitialQueues(comm_arr, title, event,cache) //if one of the comm-objs in the description is queued
   
-  handleFallbacks(comm_arr, title,event,cache) //if one of the fallbacks nested within, is queued
+  handleFallbacks(comm_arr, title, event,cache) //if one of the fallbacks nested within, is queued
   
 }
 
@@ -36,26 +36,18 @@ function handleInitialQueues(comm_arr, title,event,cache){
           
           var twilio_res = fetchResource(sid,code) //TODO: check twilio_res a little more thoroughly here
           var status = twilio_res.status
-          Logger.log(twilio_res)
+
           
           if((status == 'delivered') || (status == 'completed')){ //only handled on the first number --> we only need one
             
-            var title = event.getTitle()
-            title = title.replace('QUEUED-' + index, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
-            event.setTitle(title)
-            
+            markSuccess(event,index,code)
             break;
             
            } else if((status == 'failed') || (status == 'undelivered')){
             
-            var title = event.getTitle() //mark that it failed on whichever mode of contact
-            title = title.replace('QUEUED-' + index, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
-            //title = title.replace('QUEUED-' + index, '') //note that the first one failed
-            event.setTitle(title)
-                        
-            if((n == phone_nums.length -1) && (obj.fallbacks)){ 
-              processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
-            }          
+            markFailed(event,index)
+            if((n == phone_nums.length -1) && (obj.fallbacks)) processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
+             
           }
         }
       
@@ -94,17 +86,14 @@ function handleFallbacks(comm_arr, title,event,cache){
             
             if((status == 'delivered') || (status == 'completed')){ //only handled on the first number --> we only need one
               
-              var title = event.getTitle()
-              title = title.replace('QUEUED-' + indexes[0] + '-' + indexes[1], (code == 'sms' ? 'TEXTED ' : 'CALLED '))
-              event.setTitle(title)
-              
+              markSuccess(event,fallbacks_to_check,code)
               break;
               
             } else if((status == 'failed') || (status == 'undelivered')){
               
-              var title = event.getTitle() //mark that it failed on whichever mode of contact
-              title = title.replace('QUEUED-' + indexes[0] + '-' + indexes[1], 'FAILED-' + indexes[0] + '-' + indexes[1])
-              event.setTitle(title)
+              markFailed(event,fallbacks_to_check)
+              //TODO: expand out here if we want > 1 layer of fallbacks
+              
             }
         } 
     }

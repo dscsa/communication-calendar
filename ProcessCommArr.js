@@ -60,7 +60,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
     var phone_num = arr[n].replace(/\D/g,'') //remove non-digits
     
     if(phone_num.trim().length == 0){ //don't try to process empty phone numbers --> stop us cascading with errors from shopping sheet
-      debugEmail('Comm-Obj w/o a Phone #', "Event ID: " + event_id)
+      debugEmail('Comm-Obj w/o a Phone #', "Event ID: " + event.getId())
       continue;
     }
     
@@ -71,12 +71,12 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
     var res = null
 
     if(code == 'sms'){
+      
       response = sendSms(phone_num,message)
-    }
-
-    if(code == 'call'){
-      var callText = message //buildTwiMLCall(message, cache)
-
+      
+    } else if(code == 'call'){
+      
+      var callText = message
       updateCache(STORED_TWIML,phone_num,callText,cache) //need to cache the callText so the webApp can serve it up in their GET request
       response = sendCall(phone_num, cache)
 
@@ -91,7 +91,6 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
     
     var title_tag = 'QUEUED-'
     title_tag += is_fallback ? parent_index + '-' + index : index
-
     event.setTitle(title_tag + ' ' + event.getTitle())
     
     var update_code = code == 'sms' ? STORED_MESSAGE_SID : STORED_CALL_SID
@@ -116,7 +115,7 @@ function processEmailObj(obj, cache, event, timestamp){
     var recipient = obj.email
     
     if(recipient.toString().trim().length == 0){ //dont try to send email if theres no recipient
-      debugEmail('Email Comm-Obj w/o Recipient', "Event ID: " + event_id)
+      debugEmail('Email Comm-Obj w/o Recipient', "Event ID: " + event.getId())
       return
     }
     
@@ -130,7 +129,7 @@ function processEmailObj(obj, cache, event, timestamp){
 
     if( ! obj.from ){
 
-      if(calendar_id == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
+      if(event.getOriginalCalendarId() == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
         from = SECURE_DEFAULT_FROM
       } else {
         from = INSECURE_DEFAULT_FROM

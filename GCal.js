@@ -1,14 +1,16 @@
-//Looks to the cache through the phone_num to find eventID & calID that corresponds
-//and uses the calendar event id to tag that event appropriately
-function markCalendar(phone_num,tag, cache){
+function markFailed(event,index){
+  var title = event.getTitle() //mark that it failed on whichever mode of contact
+  title = title.replace('QUEUED-' + index, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
+  //title = title.replace('QUEUED-' + index, '') //note that the first one failed
+  event.setTitle(title)
+}
 
-  var cal_id = pullFromCache(STORED_CAL_ID,phone_num, cache)
-  var event_id = pullFromCache(STORED_EVENT_ID,phone_num, cache)
 
-  if(cal_id && event_id){
-      var event = CalendarApp.getCalendarById(cal_id).getEventById(event_id)
-      event.setTitle(tag + " - " + event.getTitle())
-  }
+function markSuccess(event,index,code){
+  var title = event.getTitle()
+  title = title.replace('QUEUED-' + index, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
+  event.setTitle(title)
+            
 }
 
 
