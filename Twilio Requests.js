@@ -62,6 +62,7 @@ function sendSms(to, body) {
 function fetchResource(sid,code){
   
   var resource = code=='sms'? 'Messages' : 'Calls'
+  
   var url = 'https://api.twilio.com/2010-04-01/Accounts/' + TWILIO_ID + '/' + resource + '/' + sid + '.json'
   
   var options = {

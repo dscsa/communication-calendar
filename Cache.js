@@ -4,8 +4,7 @@
 //code is index in the cache_arr
 //0 for call text
 //1 for message sid
-//2 for call side
-//Global variables 
+//2 for call sid
 var STORED_TWIML = 0
 var STORED_MESSAGE_SID = 1
 var STORED_CALL_SID = 2

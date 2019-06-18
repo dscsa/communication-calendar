@@ -32,15 +32,14 @@ function doGet(e) {
 
   } else { //then just a regular request for twiML
 
-
     var cache = CacheService.getScriptCache()
     twiML = pullFromCache(STORED_TWIML,phone_num, cache)
 
   }
 
   if ( ! twiML) {
+    debugEmail('doGet received butt had no twiML '+phone_num, twiML)
     twiML = getCustomErrorMessage()
-    debugEmail('WebApp TwiMl No Message '+phone_num, twiML)
   }
 
   var resp = ContentService.createTextOutput(twiML)
@@ -63,6 +62,7 @@ function getCustomErrorMessage(){
 //If we get an error from processing TwiML, need to stop making calls in case it's something that
 //will just keep repeating
 function handleTwilioError(phone_num,error_code){
+  
   if(error_code.toString() == '12100'){
     var emergency_notif = (~ PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) ? 'Action Required - Twilio parsing error on internal number' : 'URGENT ACTION REQUIRED - All calls paused - Twilio Unable to Parse our TwiML'
 
@@ -76,29 +76,13 @@ function handleTwilioError(phone_num,error_code){
 
     putHoldOnCalls()
   }
+  
 }
 
 
-
+//Places a 'hold' on calls for up to six hours. Hold must be lifted manually
 function putHoldOnCalls(){
   CacheService.getScriptCache().put('CALL-HOLD', true, 21600)
-}
-
-
-
-function testHold(){
-  Logger.log(CacheService.getScriptCache().get('CALL-HOLD'))
-}
-
-
-
-
-//Check if there is currently a hold on calls
-function holdCall(phone_num,cache){
-
-  if(~PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) return false; //don't care about hold when sending info internally
-
-  return cache.get('CALL-HOLD') ? true : false;
 }
 
 
@@ -106,3 +90,19 @@ function holdCall(phone_num,cache){
 function liftCallHold(){
   CacheService.getScriptCache().remove('CALL-HOLD')
 }
+
+
+//Used only manually for debugging
+function testHold(){
+  Logger.log(CacheService.getScriptCache().get('CALL-HOLD'))
+}
+
+
+//Called programatically to check if there is currently a hold on calls
+function holdCall(phone_num,cache){
+
+  if(~PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) return false; //don't care about hold when sending info internally
+
+  return cache.get('CALL-HOLD') ? true : false;
+}
+

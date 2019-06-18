@@ -1,16 +1,15 @@
 //Call on every CalEvent description
 //Also, call from doPost with the fallbacks array string
-function processCommArr(all_comms, event, is_fallback, cache) {
-
-  
+function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
 
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
 
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
+    
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
 
     if(obj.sms || obj.call){ //a phone communication object
-      processPhoneObject(obj,cache, event, timestamp, is_fallback)
+      processPhoneObject(i,parent_index,obj,cache, event, timestamp, is_fallback, parent_index)
 
     } else if(obj.email){ //an email object
       processEmailObj(obj,cache, event, timestamp)
@@ -18,13 +17,14 @@ function processCommArr(all_comms, event, is_fallback, cache) {
     } else if(obj.fax){
       processFaxObj(obj,cache, event, timestamp)
     }
+    
   }
 }
 
 
 
 //All phone communications will go through Twilio's API
-function processPhoneObject(obj,cache, event, timestamp, is_fallback){
+function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_fallback){
 
   try{
 
@@ -35,16 +35,14 @@ function processPhoneObject(obj,cache, event, timestamp, is_fallback){
     var fallbacks = obj.fallbacks ? JSON.stringify(obj.fallbacks) : ''
     var sms_arr = obj.sms ? obj.sms.toString().split(",") : []
     var call_arr = obj.call ? obj.call.toString().split(",") : []
-
-    //TODO: clean text message (so it can be the same, and processed differently, and don't need to have separate comm-objects)
     
     var text_message_content = cleanTextMessage(message_content,cache)
     
-    queuePhone(sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index,sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
 
     var call_message_content = cleanCallMessage(message_content,cache)
 
-    queuePhone(call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index,call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
         
   } catch(e){
     debugEmail('Failure to process a phone comm-object', JSON.stringify([e, obj]))
@@ -53,7 +51,7 @@ function processPhoneObject(obj,cache, event, timestamp, is_fallback){
 
 
 //Manages sending requests to Twilio, lining up the caching required to catch callbacks later
-function queuePhone(arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
+function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
 
   var phone_num_arr = [] //use this to store all sids in one object, and create a linked bunch of caching values, that way we only go to fallbacks if all of them fail
 
@@ -91,10 +89,10 @@ function queuePhone(arr,code,message,fallback_str,cache, event, timestamp, is_fa
       res = JSON.parse(response.getContentText())
     }
     
-    var title_tag = is_fallback ? 'QUEUED-FALL-' : 'QUEUED-'
-    title_tag += code + ' '
+    var title_tag = 'QUEUED-'
+    title_tag += is_fallback ? parent_index + '-' + index : index
 
-    event.setTitle(title_tag + event.getTitle())
+    event.setTitle(title_tag + ' ' + event.getTitle())
     
     var update_code = code == 'sms' ? STORED_MESSAGE_SID : STORED_CALL_SID
     updateCache(update_code,phone_num,res.sid,cache)
