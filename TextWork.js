@@ -20,7 +20,7 @@ function decodeDescription(raw){
 
   var clean5 = clean4.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
+  //debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
 
   return clean5
 }

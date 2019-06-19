@@ -63,6 +63,7 @@ function handleTwilioObjects(index,obj, event,cache){
     for(var n = 0; n < phone_nums.length; n++){
       
       var num = phone_nums[n].replace(/\D/g,'').trim()
+      
       var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
       
       var raw_res = fetchResource(sid,code)
@@ -77,9 +78,9 @@ function handleTwilioObjects(index,obj, event,cache){
       
       var status = twilio_res.status
 
-      if((status == 'delivered') || (status == 'completed')){ //only handled on the first number --> we only need one
+      if((status == 'delivered') || (status == 'completed')){ 
         
-        markSuccess(event,index,code)
+        markSuccess(event,index,code) //only handled on the first number --> we only need one
         break;
         
       } else if((status == 'failed') || (status == 'undelivered')){
