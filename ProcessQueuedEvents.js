@@ -35,7 +35,7 @@ function handleInitialQueues(comm_arr, title,event,cache){
 //and tags appropriately
 function handleFallbacks(comm_arr, title,event,cache){
   var fallbacks_to_check = extractFallbackTags(title)
-
+  Logger.log(fallbacks_to_check)
   for(var i = 0; i < fallbacks_to_check.length; i++){
     
     var indexes = fallbacks_to_check[i].split("-") //first part is parent index, second is fallbackarra index
@@ -45,8 +45,8 @@ function handleFallbacks(comm_arr, title,event,cache){
     var fallbacks = parent_obj.fallbacks //this is the array that you need to check
     
     var obj = fallbacks[indexes[1]]
-    
-    if(obj.sms || obj.call) handleTwilioObjects(fallbacks_to_check,obj, event,cache) 
+
+    if(obj.sms || obj.call) handleTwilioObjects(fallbacks_to_check[i],obj, event,cache) 
     
   }
 }
@@ -63,7 +63,7 @@ function handleTwilioObjects(index,obj, event,cache){
     for(var n = 0; n < phone_nums.length; n++){
       
       var num = phone_nums[n].replace(/\D/g,'').trim()
-      
+      Logger.log(num)
       var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
       
       var raw_res = fetchResource(sid,code)
@@ -75,7 +75,7 @@ function handleTwilioObjects(index,obj, event,cache){
       } else {
         twilio_res = JSON.parse(raw_res.getContentText())
       }
-      
+
       var status = twilio_res.status
 
       if((status == 'delivered') || (status == 'completed')){ 

@@ -41,7 +41,7 @@ Comm-Objects: A JSON with information for an outbound contact. Can be:
              - Can include 'cc' and 'bcc' fields
 
              - The contents of 'message' field will be sent to the address(es) in 'email'
-             
+
              - Can be given a 'from' field which can either be an email, or structured as "Name <email>" if you want the email info to list a particular name
 
              - Requires 'message', 'email, 'subject' fields for bare minimum
@@ -60,21 +60,21 @@ Fallbacks: Any comm-object can have a 'fallbacks' property, which is a Comm-Arr 
 
 The main function, that can be set to trigger regularly.
 
-### Parse
+### TextWork
 
-Handles parsing of comm-arrays and comm-objects.
+Handles parsing of comm-arrays and comm-objects, any string work, regex cleaning should be contained here.
 
 ### GCal
 
-Helper functions related to the Google Calendar (creating events, shifting events, gathering events)
+Helper functions related to the Google Calendar (creating events, shifting events, gathering events, copying calendars, marking events)
 
 ### Twilio requests
 
-Two functions that can be sent to Twilio, sendSMS and sendCall. Handles building request and fetching.
+Three functions that can be sent to Twilio, sendSMS, sendCall, and fetchResource (that checks status given sid & type of communciation). Handles building request and fetching.
 
 ### WebApp
 
-doGet and doPost functions that define the WebApp. This will need to be deployed from within script editor. Necessary for Twilio integration
+doGet function that defines the WebApp. This will need to be deployed from within script editor. Necessary for Twilio integration. GET serves up TwiML code for calls, and handles any errors witht he call service.
 
 ### Helpers
 
@@ -82,7 +82,12 @@ Helper functions (misc)
 
 ### Testing
 
-Some basic main() testing.
+Set up a test Google Sheet, deploy and set up the Key.gs with necessary constants / secret keys.
+
+1) Run a trigger for calendarCopier() <-- this will sync up a test calendar with the live calendar, so you can run side-by-side
+2) Make sure LIVE_MODE in the test sheet is set to false
+3) Make sure main() is pulling from TEST_CAL_ID and not SECURE_CAL_ID
+
 
 ### Audio Playing
 

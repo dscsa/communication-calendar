@@ -38,11 +38,11 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
     
     var text_message_content = cleanTextMessage(message_content,cache)
     
-    queuePhone(index,parent_index,sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
 
     var call_message_content = cleanCallMessage(message_content,cache)
 
-    queuePhone(index,parent_index,call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index, call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
         
   } catch(e){
     debugEmail('Failure to process a phone comm-object', JSON.stringify([e, obj]))
@@ -77,8 +77,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       
     } else if(code == 'call'){
       
-      updateCache(STORED_TWIML,phone_num,message,cache) //need to cache the callText so the webApp can serve it up in their GET request
-      response = sendCall(phone_num)
+      response = sendCall(phone_num, message, cache) //needs cache because of how we send twiml
 
     }
 

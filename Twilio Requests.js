@@ -1,8 +1,10 @@
 //Build request to Twilio Call service to place an outbound call
-function sendCall(to){
+function sendCall(to, message, cache){
 
   if(!LIVE_MODE) to = PRODUCTION_SPAMPROOF_PHONE;
 
+  updateCache(STORED_TWIML,to,message,cache) //need to cache the callText so the webApp can serve it up in their GET request
+  
   var messages_url = "https://api.twilio.com/2010-04-01/Accounts/" + TWILIO_ID + "/Calls.json";
 
   var payload = {
