@@ -18,7 +18,8 @@ function main(){
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
     
-    processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
+    processEvents(TEST_CAL_ID, oneMinuteBack,queueTimeSpan)
+    //processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {

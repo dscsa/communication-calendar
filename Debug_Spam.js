@@ -29,7 +29,7 @@ function emergencyEmail(subject,body){
 //For emails, that's all emails we've sent them
 function wouldSpam(contact_type, addr, body, cache, timestamp){
 
-  if( ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_ERRORS_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
+  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_ERRORS_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
 
   var res = false
   var prev_contacts = getContactHistory(addr, cache)  || ''

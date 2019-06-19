@@ -1,3 +1,24 @@
+//Only called from the test sheet -> copies events from the live calendar into 
+//the test cal so that we can fully test without interfering
+function calendarCopier(){
+  var live_cal = CalendarApp.getCalendarById(SECURE_CAL_ID)
+  var test_cal = CalendarApp.getCalendarById(TEST_CAL_ID)
+  
+  var now = new Date();
+  var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
+  var events_to_copy = live_cal.getEvents(oneMinuteBack, now)
+  
+  for(var i = 0; i < events_to_copy.length; i++){
+    if(events_to_copy[i].getStartTime().getTime() >= oneMinuteBack.getTime()){
+      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED/g,''), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
+    }
+  }
+}
+
+
+
+
+
 function markFailed(event,index){
   var title = event.getTitle() //mark that it failed on whichever mode of contact
   title = title.replace('QUEUED-' + index, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
