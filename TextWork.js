@@ -20,7 +20,7 @@ function decodeDescription(raw){
 
   var clean5 = clean4.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
+  //debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
 
   return clean5
 }
@@ -160,3 +160,28 @@ function eventString(events) {
     return s+event.getStartTime()+': '+event.getTitle()+', '+event.getDescription()+'; '
   }
 }
+
+
+
+//For recognizng from the title, what part of an event should be checked -----
+function extractFallbackTags(str){
+  var rx = /QUEUED-(\d*?-\d*?) /g
+  return getAllMatches(rx,str)
+}
+
+
+function extractQueuedTags(str){
+  var rx = /QUEUED-(\d*?) /g
+  return getAllMatches(rx,str)
+}
+
+function getAllMatches(rx,str){
+  var arr = rx.exec(str)
+  var res = []
+  while(arr != null){
+    res.push(arr[1])
+    arr = rx.exec(str)
+  }
+  return res
+}
+//------------------------

@@ -1,5 +1,3 @@
-//TODO: Adjust SOD and EOD variables back to business hours before turning live on
-
 //Regularly triggered main function that handles integration 
 //between Calendar and Twilio
 function main(){
@@ -15,18 +13,19 @@ function main(){
   Logger.log("Running Main")
 
   try {
+    
     var now = new Date();
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
-
-    processEvents(SECURE_CAL_ID, oneMinuteBack)
+    var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
+    
+    processEvents(TEST_CAL_ID, oneMinuteBack,queueTimeSpan)
+    //processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {
     debugEmail('main','error: '+e.message+' '+e.stack)
     console.log('main error: '+e.message+' '+e.stack)
   }
- 
-
  
   lock.releaseLock()
   
@@ -35,44 +34,62 @@ function main(){
 }
 
 
-function compUrl(){
-  Logger.log(ScriptApp.getService().getUrl())  
-}
-
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-06-11T13:28:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
-  processEvents(TEST_CAL_ID,date_back)
+  var date_back = new Date('2019-06-19T20:59:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  processEvents(TEST_CAL_ID,date_back,date_back)
 }
+
 
 
 //Looks to one of the calendars under this account to find events that need processing
-//set up with this api so that it can be more easy to test
+//and those that need to be checked
+//set up with this api (of having the times as parameterrs) so that it can be more easy to test
 //by having a consistent startTime
-function processEvents(calendar_id, startTimeDate){
+function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
 
-  var events = getCalEvents(calendar_id, startTimeDate)
+  var events_to_queue = getEventsToQueue(calendar_id, timeToQueue)
+  var queued_events = getQueuedEvents(calendar_id,timeAlreadyQueued)
+  
+  var cache = CacheService.getScriptCache()
   
   if(!inLiveHours()){
-    shiftEvents(events)
+    shiftEvents(events_to_queue.concat(queued_events))
     return
   }
   
-  for(var i = 0; i < events.length; i++){
-  
-    var location = events[i].getLocation()
-    var description = events[i].getDescription()
-    var title = events[i].getTitle() 
-
-    description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
-
-    processCommArr(description, events[i].getId(), calendar_id)
-    
-  }
-  
+  coordinateProcessing(0,events_to_queue,cache)
+  coordinateProcessing(1,queued_events,cache)
 }
 
+
+function coordinateProcessing(code,arr_events,cache){
+  
+ for(var i = 0; i < arr_events.length; i++){
+  
+   var description = arr_events[i].getDescription()
+   description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
+
+   var comm_arr = {}
+    
+   try {
+      comm_arr = JSON.parse(description)
+   } catch (e) {
+      debugEmail('Failure to process a comm-array', JSON.stringify([e, description]))
+      continue
+   }
+    
+   if(code){
+     Logger.log('revisiting event')
+     processQueuedEvent(comm_arr, arr_events[i], cache) //check status of queued objects, and potentially engage fallbacks
+   } else {
+     Logger.log('processing event for first time')
+     processCommArr(comm_arr, arr_events[i], false, cache) //directly handle the event, it hasn't been queued
+   }
+    
+  }
+}
 
 
 

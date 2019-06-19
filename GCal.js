@@ -1,23 +1,51 @@
-//Called from WebApp callback.
-//Looks to the cache through the phone_num to find eventID & calID that corresponds
-//and uses the calendar event id to tag that event appropriately
-function markCalendar(phone_num,tag, cache){
-
-  var cal_id = pullFromCache(STORED_CAL_ID,phone_num, cache)
-  var event_id = pullFromCache(STORED_EVENT_ID,phone_num, cache)
-
-  if(cal_id && event_id){
-      var event = CalendarApp.getCalendarById(cal_id).getEventById(event_id)
-      event.setTitle(tag + " - " + event.getTitle())
+//Only called from the test sheet -> copies events from the live calendar into 
+//the test cal so that we can fully test without interfering
+function calendarCopier(){
+  var live_cal = CalendarApp.getCalendarById(SECURE_CAL_ID)
+  var test_cal = CalendarApp.getCalendarById(TEST_CAL_ID)
+  
+  var now = new Date();
+  var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
+  var events_to_copy = live_cal.getEvents(oneMinuteBack, now)
+  
+  for(var i = 0; i < events_to_copy.length; i++){
+    if(events_to_copy[i].getStartTime().getTime() >= oneMinuteBack.getTime()){
+      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED/g,''), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
+    }
   }
 }
 
 
 
-//Gets all Calendar events that have started since the given starttime
-//For regular functionality, startTimeDate = now - 60 seconds
-//But for debugging, can be specified to highlight specific time for test event
-function getCalEvents(calendar_id, startTimeDate){
+
+
+function markFailed(event,index){
+  var title = event.getTitle() //mark that it failed on whichever mode of contact
+  title = title.replace('QUEUED-' + index, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
+  //title = title.replace('QUEUED-' + index, '') //note that the first one failed
+  event.setTitle(title)
+}
+
+
+function markSuccess(event,index,code){
+  var title = event.getTitle()
+  title = title.replace('QUEUED-' + index, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
+  event.setTitle(title)
+            
+}
+
+
+    
+function markQueued(event,is_fallback,parent_index,index){
+    var title_tag = 'QUEUED-'
+    title_tag += is_fallback ? parent_index + '-' + index : index
+    event.setTitle(title_tag + ' ' + event.getTitle())
+}
+
+
+
+//Get events that haven't yet been touched, and will need to be queued up
+function getEventsToQueue(calendar_id, startTimeDate){
 
   var calendar = CalendarApp.getCalendarById(calendar_id)
   var now = new Date();
@@ -28,8 +56,7 @@ function getCalEvents(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    console.log(title)
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")) continue; //don't reprocess a tagged event
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED") || ~ title.indexOf("QUEUED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
 
@@ -37,6 +64,27 @@ function getCalEvents(calendar_id, startTimeDate){
 
 }
 
+
+//Get events that have been queued and either need a fallback processed,
+//or they need to be tagged as done
+function getQueuedEvents(calendar_id, startTimeDate){
+
+  var calendar = CalendarApp.getCalendarById(calendar_id)
+  var now = new Date();
+
+  var raw_events = calendar.getEvents(startTimeDate, now); //gets all events that OCCURED between startimedate and now
+
+  var res = []
+
+  for(var i = 0; i < raw_events.length; i++){
+    var title = raw_events[i].getTitle()
+    if( !(~ title.indexOf('QUEUED'))) continue;
+    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i])
+  }
+
+  return res
+
+}
 
 
 

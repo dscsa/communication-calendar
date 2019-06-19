@@ -29,7 +29,7 @@ function emergencyEmail(subject,body){
 //For emails, that's all emails we've sent them
 function wouldSpam(contact_type, addr, body, cache, timestamp){
 
-  if( ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_ERRORS_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
+  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_SPAMPROOF_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
 
   var res = false
   var prev_contacts = getContactHistory(addr, cache)  || ''
@@ -63,7 +63,7 @@ function  extractTypeOfOutboundEmail(body){
 
 
 function sendSpamAlertEmail(msg_history, addr){
-  var alertEmail = 'We are at risk of spamming this contact address: ' + addr + '<br>'
+  var alertEmail = 'HOLD placed on this addr: ' + addr + '<br><br>The last element of the history below was blocked. See complete message history to identify issue.'
   alertEmail += '<br>History of contact:<br>'
   alertEmail += msg_history
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, 'Stop Spam', '', {htmlBody: alertEmail})

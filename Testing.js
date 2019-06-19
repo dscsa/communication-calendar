@@ -9,9 +9,6 @@ function testNewCache(){
  Logger.log(str.replace(/\D/g,''))
 }
 
-function clearCache(){
-  CacheService.getScriptCache().remove("sd")
-}
 
 function checkCache(){
   var num = "7066330218"
