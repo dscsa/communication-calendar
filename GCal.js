@@ -43,6 +43,10 @@ function markQueued(event,is_fallback,parent_index,index){
 }
 
 
+function spamTagCal(event){
+  event.setTitle('SPAM-STOPPED  - ' + event.getTitle())
+}
+
 
 //Get events that haven't yet been touched, and will need to be queued up
 function getEventsToQueue(calendar_id, startTimeDate){
@@ -56,7 +60,7 @@ function getEventsToQueue(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED") || ~ title.indexOf("QUEUED")) continue; //don't reprocess a tagged event
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
 
@@ -78,6 +82,7 @@ function getQueuedEvents(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
+    if( ~ title.indexOf('STOPPED')) continue;
     if( !(~ title.indexOf('QUEUED'))) continue;
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i])
   }

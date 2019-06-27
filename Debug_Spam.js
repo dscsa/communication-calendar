@@ -11,6 +11,7 @@ function debugEmail(subject,body){
 }
 
 
+
 //This email has to be sent, doesn't matter if we're approaching quota
 function emergencyEmail(subject,body){
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, subject,body)
@@ -19,34 +20,31 @@ function emergencyEmail(subject,body){
 
 
 
-//Given a phone number or an email, checks the cache
-//If there (meaning we sent a contact in the last 6 hours), don't contact again
-//unless it's a different type of communication
-//If it'd be spam, sends email about issue
-//contact_type = '#text#' or '#call#' or '#email#'
-//Cache entry for each addr is the message_history
-//For phones, that's 'text','call'
-//For emails, that's all emails we've sent them
-function wouldSpam(contact_type, addr, body, cache, timestamp){
 
-  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_SPAMPROOF_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
+//Given a patient's name, checks the cache for how many objects have been processed for them so far
+//Set a limit in keys.gs of how many objects can be processed
+function wouldSpam(event, cache, comm_arr, timestamp){
+  
+  var patient_name = extractNameFromEvent(event.getTitle());
+  
+  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_NAMES.indexOf(patient_name)) return false; //for debugging and general testing, don't worry about spamming ourselves
 
-  var res = false
-  var prev_contacts = getContactHistory(addr, cache)  || ''
+  var event_id = event.getId();
+  
+  var prev_contacts = getContactHistory(patient_name,cache) || ''
+  var would_be_spam = prev_contacts.split('Event ID').length > PER_PATIENT_EVENT_LIMIT //if we've hit their limit already
+  
+  var msg_history = prev_contacts + "<br><br>" + timestamp + ": " + patient_name + ": Event ID: " + event_id + "<br>Comm Arr:<br>" + JSON.stringify(comm_arr) 
+  
+  Logger.log(msg_history)
+  
+  if(would_be_spam) sendSpamAlertEmail(msg_history,patient_name)
+   
+  updateContactHistory(patient_name, msg_history,cache)
 
-  if(contact_type == '#email#'){
-    contact_type = extractTypeOfOutboundEmail(body) //get thet ype of email (shipped, update, notif)
-  }
-
-  res = ~ prev_contacts.indexOf(contact_type) //have we sent this type of communicatiojn to this number in thelast 6 hours?
-
-  var msg_history = prev_contacts + "<br>" + contact_type + " : " + timestamp + " : " + addr + "<br>" + body
-
-  updateContactHistory(addr, msg_history,cache)
-
-  if(res) sendSpamAlertEmail(msg_history, addr);
-
-  return res
+  return would_be_spam
+  
+  
 }
 
 
@@ -62,8 +60,8 @@ function  extractTypeOfOutboundEmail(body){
 
 
 
-function sendSpamAlertEmail(msg_history, addr){
-  var alertEmail = 'HOLD placed on this addr: ' + addr + '<br><br>The last element of the history below was blocked. See complete message history to identify issue.'
+function sendSpamAlertEmail(msg_history, name){
+  var alertEmail = 'HOLD placed on this patient: ' + name + '<br><br>The last element of the history below was blocked. See complete message history to identify issue.'
   alertEmail += '<br>History of contact:<br>'
   alertEmail += msg_history
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, 'Stop Spam', '', {htmlBody: alertEmail})

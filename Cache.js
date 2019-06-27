@@ -33,21 +33,20 @@ function pullFromCache(code,phone_num, cache){
   
 }
 
-
 function clearCache(phone_num, cache){
   cache.remove(phone_num)
 }
 
 
 //For spamming, just a little abstraction over the tags here
-function getContactHistory(addr,cache){
-  return cache.get(addr + "-HISTORY")
+function getContactHistory(name,cache){
+  return cache.get(name + "-HISTORY")
 }
 
-function updateContactHistory(addr,contact_history,cache){
-  cache.put(addr + "-HISTORY",contact_history,4*60*60) //still store in case we come back again, and track each spam attempt
-}
 
+function updateContactHistory(name,contact_history,cache){
+  cache.put(name + "-HISTORY",contact_history,4*60*60) //still store in case we come back again, and track each spam attempt
+}
 
 
 

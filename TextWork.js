@@ -150,6 +150,12 @@ function lookupFileName(filename, cache){
 }
 
 
+function extractNameFromEvent(title){
+  var rx = /: (.+?) (19|20)\d{2}-\d{2}-\d{2}.  Created/g
+  var res = rx.exec(title)[1]
+  return res.toLowerCase().trim();
+}
+
 
 //For debugging purposes, gives complete info about an event
 function eventString(events) {

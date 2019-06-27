@@ -1,8 +1,14 @@
 //Call on every CalEvent description
 //Also, call from doPost with the fallbacks array string
 function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
-
+  
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
+
+  if(wouldSpam(event, cache, all_comms, timestamp)){
+    spamTagCal(event)
+    return
+  }
+  
 
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     
@@ -20,7 +26,6 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
     
   }
 }
-
 
 
 //All phone communications will go through Twilio's API
@@ -65,8 +70,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       continue;
     }
     
-    if(((code == 'call') && holdCall(phone_num,cache)) ||
-       wouldSpam("#" + code + "#",phone_num, message, cache, timestamp)) continue;  //wouldSpam will handle checking/updating cache & sending an alert email if necessary
+    if((code == 'call') && holdCall(phone_num,cache)) continue;  
 
     var response = null
     var res = null
@@ -117,8 +121,6 @@ function processEmailObj(obj, cache, event, timestamp){
     
     var subject = obj.subject
     var body = obj.message
-
-    if(wouldSpam("#email#",recipient, body, cache, timestamp)) return;  //wouldSpam will handle checking/updating cache & sending an alert email if necessary
 
     var from = ""
     var name = ""
