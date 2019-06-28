@@ -149,11 +149,14 @@ function lookupFileName(filename, cache){
   return file.getId()
 }
 
+function testrx(){
+  Logger.log(extractNameFromEvent("15396 Order Created: Kathy BERENATO 1965-01-17.  Created:Thu Jun 27 2019 20:28:30 GMT-0400 (EDT)"))
+}
 
 function extractNameFromEvent(title){
-  var rx = /: (.+?) (19|20)\d{2}-\d{2}-\d{2}.  Created/g
-  var res = rx.exec(title)[1]
-  return res.toLowerCase().trim();
+  var rx = /: (.+?) (19|20)\d{2}-\d{2}-\d{2}.  Created/
+  var res = rx.exec(title.toString().trim())
+  return res[1].toLowerCase().trim();
 }
 
 

@@ -7,6 +7,7 @@ function main(){
   try{
     lock.waitLock(1000) //if we don't have the lock
   } catch(e) {
+    debugEmail('Could not acquire lock in main','Probably linked to the sporadic lock.releaselock() issue. Put lock.relaseLock() into a try-catch as per this: https://stackoverflow.com/questions/53277135/there-are-too-many-lockservice-operations-against-the-same-script')
     console.log("Could not get script lock");
   }
   
@@ -18,15 +19,14 @@ function main(){
     var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
     
-    processEvents(TEST_CAL_ID, oneMinuteBack,queueTimeSpan)
-    //processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
+    processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     //processEvents(INSECURE_CAL_ID,oneMinuteBack)
     
   } catch (e) {
     debugEmail('main','error: '+e.message+' '+e.stack)
     console.log('main error: '+e.message+' '+e.stack)
   }
- 
+  
   lock.releaseLock()
   
   Logger.log("Finished Main")
@@ -37,7 +37,7 @@ function main(){
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-06-27T17:28:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-06-28T14:00:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back,date_back)
 }
 
