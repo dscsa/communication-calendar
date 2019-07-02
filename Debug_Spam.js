@@ -23,7 +23,7 @@ function emergencyEmail(subject,body){
 
 //Given a patient's name, checks the cache for how many objects have been processed for them so far
 //Set a limit in keys.gs of how many objects can be processed
-function wouldSpam(event, cache, comm_arr, timestamp){
+function wouldSpam(event, cache, comm_arr, timestamp, is_fallback){
   
   var patient_name = extractNameFromEvent(event.getTitle());
   
@@ -32,13 +32,16 @@ function wouldSpam(event, cache, comm_arr, timestamp){
   var event_id = event.getId();
   
   var prev_contacts = getContactHistory(patient_name,cache) || ''
-  var would_be_spam = prev_contacts.split('Event ID').length > PER_PATIENT_EVENT_LIMIT //if we've hit their limit already
-  
+  var num_events = prev_contacts.split('Event ID').length
+
+  var would_be_spam = num_events > PER_PATIENT_EVENT_LIMIT //if we've hit their limit already
+
+  if(is_fallback) return would_be_spam; //don't go on to add duplicates to the message history, or send spam alert again  
+
   var msg_history = prev_contacts + "<br><br>" + timestamp + ": " + patient_name + ": Event ID: " + event_id + "<br>Comm Arr:<br>" + JSON.stringify(comm_arr) 
-  
-  Logger.log(msg_history)
-  
-  if(would_be_spam) sendSpamAlertEmail(msg_history,patient_name)
+    
+  if(would_be_spam) sendSpamAlertEmail(msg_history,patient_name);
+  if(num_events == (PER_PATIENT_EVENT_LIMIT - 1)) debugEmail('Processing last permissible event for patient','HOLD will be placed on ' + patient_name + 'if another event is processed soon.\nMsg history below\n' + msg_history.replace(/<br>/g,'\n'));
    
   updateContactHistory(patient_name, msg_history,cache)
 

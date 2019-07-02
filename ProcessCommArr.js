@@ -4,7 +4,7 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
   
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
 
-  if(wouldSpam(event, cache, all_comms, timestamp)){
+  if(wouldSpam(event, cache, all_comms, timestamp, is_fallback)){
     spamTagCal(event)
     return
   }
