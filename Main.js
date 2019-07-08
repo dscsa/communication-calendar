@@ -7,7 +7,7 @@ function main(){
   try{
     lock.waitLock(1000) //if we don't have the lock
   } catch(e) {
-    debugEmail('Could not acquire lock in main','Probably linked to the sporadic lock.releaselock() issue. Put lock.relaseLock() into a try-catch as per this: https://stackoverflow.com/questions/53277135/there-are-too-many-lockservice-operations-against-the-same-script')
+    //debugEmail('Could not acquire lock in main','Probably linked to the sporadic lock.releaselock() issue. Put lock.relaseLock() into a try-catch as per this: https://stackoverflow.com/questions/53277135/there-are-too-many-lockservice-operations-against-the-same-script')
     console.log("Could not get script lock");
   }
   
@@ -27,7 +27,12 @@ function main(){
     console.log('main error: '+e.message+' '+e.stack)
   }
   
-  lock.releaseLock()
+  try{
+    lock.releaseLock()
+  } catch(e){ //there is a sporadic error on google's end where this fails, so they suggest putting it in a try/catch and sleeping, then retrying https://issuetracker.google.com/issues/112384851
+    Utilities.sleep(3000);
+    lock.releaseLock()
+  }
   
   Logger.log("Finished Main")
 
