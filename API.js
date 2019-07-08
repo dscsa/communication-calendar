@@ -23,8 +23,11 @@ function doPost(e) {
   var title = request.title
   var event_body = request.body
   
-  if(!title) resp_json.error = 'No title provided'
-  if(!event_body) resp_json.error = 'No event body provided'
+  if(!title || !event_body){
+    if(!title) resp_json.error = 'No title provided'
+    if(!event_body) resp_json.error = 'No body provided'
+    return response.setContent(JSON.stringify(resp_json)).setMimeType(ContentService.MimeType.JSON)
+  }
   
   var start = new Date();
   
@@ -42,7 +45,7 @@ function doPost(e) {
   var end = new Date()
   end.setTime(start.getTime() + 1000 * 60 * minutes)
   
-  CalendarApp.getCalendarById(TEST_CAL_ID).createEvent(title, start, end, {'description':event_body}) //TODO: swtich to SECURE_CAL_ID
+  CalendarApp.getCalendarById(SECURE_CAL_ID).createEvent(title, start, end, {'description':event_body}) //TODO: swtich to SECURE_CAL_ID
   
   resp_json.success = 'event created'
   response.setContent(JSON.stringify(resp_json))
