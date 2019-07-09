@@ -42,7 +42,7 @@ function main(){
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-06-28T14:00:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-07-09T15:15:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back,date_back)
 }
 
@@ -58,11 +58,6 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
   var queued_events = getQueuedEvents(calendar_id,timeAlreadyQueued)
   
   var cache = CacheService.getScriptCache()
-  
-  if(!inLiveHours()){
-    shiftEvents(events_to_queue.concat(queued_events))
-    return
-  }
   
   coordinateProcessing(0,events_to_queue,cache)
   coordinateProcessing(1,queued_events,cache)
@@ -84,19 +79,20 @@ function coordinateProcessing(code,arr_events,cache){
       debugEmail('Failure to process a comm-array', JSON.stringify([e, description]))
       continue
    }
+   
+   if(shouldShift(comm_arr, arr_events[i])) continue;
     
    if(code){
-     Logger.log('revisiting event')
+     console.log('revisiting event')
      processQueuedEvent(comm_arr, arr_events[i], cache) //check status of queued objects, and potentially engage fallbacks
+   
    } else {
-     Logger.log('processing event for first time')
+     console.log('processing event for first time')
      processCommArr(comm_arr, arr_events[i], false, cache) //directly handle the event, it hasn't been queued
    }
     
   }
 }
-
-
 
 
 
