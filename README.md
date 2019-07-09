@@ -60,6 +60,13 @@ Fallbacks: Any comm-object can have a 'fallbacks' property, which is a Comm-Arr 
 
 The main function, that can be set to trigger regularly.
 
+### POST API
+
+Can accept POST requests at the web app url.
+
+#Create Events through POST Requests
+To use this, must create a ScriptProperty called api_pwd, and that must be included in the requests, along with 'title' for the event and 'body' which will go into location. Optional parameters: 'start' in UTC time string, and 'minutes' for length of the event.
+
 ### TextWork
 
 Handles parsing of comm-arrays and comm-objects, any string work, regex cleaning should be contained here.
@@ -88,7 +95,18 @@ Set up a test Google Sheet, deploy and set up the Key.gs with necessary constant
 2) Make sure LIVE_MODE in the test sheet is set to false
 3) Make sure main() is pulling from TEST_CAL_ID and not SECURE_CAL_ID
 
+###Debug-Spam Guard
 
-### Audio Playing
+Handles checking whether a given communciation event will spamm a user. Also handles debug emails, formatting and sending to appropriate addresses
 
-MVP of using pre-recorded audio. Useful for debugging or development, nothing in production
+###ProcessCommArr
+
+Handles taking a comm-arr and delegating & processing appropriately. Handles sms, call, and email. TODO: fax.
+
+###Cache
+
+Handles interactions with cache. The ScriptCache is used to track potential spam, store TwiML that needs to be served up by WebApp
+
+###ProcessQueuedEvents
+
+Script will check each event atleast twice: once to send to Twilio (queuing) and once to check the result (marking as TEXTED, CALLED, etc). If failed, will engage fallbacks. This is done as opposed to waiting on a webApp request from Twilio. Those often fail because of some issue between Twilio-Google.
