@@ -25,6 +25,8 @@ function emergencyEmail(subject,body){
 //Set a limit in keys.gs of how many objects can be processed
 function wouldSpam(event, cache, comm_arr, timestamp, is_fallback){
   
+  if(~ event.getTitle().toString().toLowerCase().indexOf('password reset')) return false; //temporary shortcut before next milestone
+  
   var patient_name = extractNameFromEvent(event.getTitle());
   
   if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_NAMES.indexOf(patient_name)) return false; //for debugging and general testing, don't worry about spamming ourselves
