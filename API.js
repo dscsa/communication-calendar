@@ -32,19 +32,13 @@ function doPost(e) {
   
   event_body = JSON.stringify(event_body,null," ")
   
-  var start = new Date();
-  
-  if(request.start){
-    var rx = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}-\d{2}:\d{2}/
-    if(request.start.match(rx)){
-      start = new Date(request.start)
-    } else {
-      start = new Date()
-    }
+  if(request.start && isNaN(Date.parse(request.start))){
+    resp_json.error = 'Start field is not parseable by Javascripts Date.parse(start). Please restructure or remove'
+    return response.setContent(JSON.stringify(resp_json)).setMimeType(ContentService.MimeType.JSON)
   }
   
+  var start = request.start ? new Date(request.start) : new Date();
   var minutes = request.minutes ? parseInt(request.minutes) : 30
-  
   var end = new Date()
   end.setTime(start.getTime() + 1000 * 60 * minutes)
   
