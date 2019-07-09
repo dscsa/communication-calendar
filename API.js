@@ -30,7 +30,7 @@ function doPost(e) {
     return response.setContent(JSON.stringify(resp_json)).setMimeType(ContentService.MimeType.JSON)
   }
   
-  event_body = JSON.stringify(event_body)
+  event_body = JSON.stringify(event_body,null," ")
   
   var start = new Date();
   
