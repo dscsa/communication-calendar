@@ -93,6 +93,29 @@ function getQueuedEvents(calendar_id, startTimeDate){
 
 
 
+//Checks both the live hours (against the current time), 
+//and whether the event has workHours set to true
+//If workHours is not in the object, assume its true
+//Then, if an event is meant for workHours, then shift it and return
+//true so it doesn't get processed
+function shouldShift(comm_arr, event){
+  
+  if((!inLiveHours()) && (comm_arr.length > 0)){
+    var workHours = ('workHours' in comm_arr[0]) ? comm_arr[0].workHours : true //if no workHours field is set, assume it needs to be processed only in work hours
+  
+    if(workHours){
+      console.log('shifting event');
+      shiftEvents([event])
+      return true
+    }
+ }
+ 
+ return false
+}
+
+
+
+
 //If there's an event created during off-hours, shift it to the start of day time
 function shiftEvents(events){
   var now = new Date()

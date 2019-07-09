@@ -9,7 +9,7 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
     return
   }
   
-
+  
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other

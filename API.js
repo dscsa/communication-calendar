@@ -1,11 +1,12 @@
 //A simple API that creates calendar events
 function doPost(e) {
+
   var request = JSON.parse(e.postData.contents)
-  
+
   var password = request['password']
   
   var true_password = getPwd()
-  
+
   var response = ContentService.createTextOutput('')
   var resp_json = {}
      
@@ -28,6 +29,8 @@ function doPost(e) {
     if(!event_body) resp_json.error = 'No body provided'
     return response.setContent(JSON.stringify(resp_json)).setMimeType(ContentService.MimeType.JSON)
   }
+  
+  event_body = JSON.stringify(event_body)
   
   var start = new Date();
   

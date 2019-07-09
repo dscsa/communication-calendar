@@ -35,7 +35,7 @@ function handleInitialQueues(comm_arr, title,event,cache){
 //and tags appropriately
 function handleFallbacks(comm_arr, title,event,cache){
   var fallbacks_to_check = extractFallbackTags(title)
-  Logger.log(fallbacks_to_check)
+
   for(var i = 0; i < fallbacks_to_check.length; i++){
     
     var indexes = fallbacks_to_check[i].split("-") //first part is parent index, second is fallbackarra index
@@ -63,7 +63,7 @@ function handleTwilioObjects(index,obj, event,cache){
     for(var n = 0; n < phone_nums.length; n++){
       
       var num = phone_nums[n].replace(/\D/g,'').trim()
-      Logger.log(num)
+
       var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
       
       var raw_res = fetchResource(sid,code)
