@@ -6,7 +6,7 @@ function decodeDescription(raw){
   try {
     var clean1 = decodeURIComponent(raw)
   } catch (e) {
-    debugEmail('decodeDescription decodeURI Error', JSON.stringify([raw, e])) 
+    debugEmail('decodeDescription decodeURI Error', JSON.stringify([raw, e]))
     var clean1 = raw
   }
 
@@ -15,14 +15,16 @@ function decodeDescription(raw){
   // Remove <br> AND \n that are not in quotes which are added by google calendar if user hand edits a google calendar json description
   var clean3 = clean2.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
-  // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
-  var clean4 = clean3.replace(/<a href="mailto:.+?" target="_blank">(.+?)<\/a>/g, '$1')
+  var clean4 = clean3.replace(/[^\]\n/g, '') //15942: Hand edit of calendar can cause \n within quotes so remove those but not the \\n ones
 
-  var clean5 = clean4.replace(/<u><\/u>/g, '') //not sure why good inserts these
+  // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
+  var clean5 = clean4.replace(/<a href="mailto:.+?".*?>(.+?)<\/a>/g, '$1')
+
+  var clean6 = clean5.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
   //debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
 
-  return clean5
+  return clean6
 }
 
 
@@ -59,9 +61,9 @@ function decodeEntities(encodedString) {
 }
 
 function cleanTextMessage(raw,cache){
-  
+
   var clean = raw.replace(/<.*?>/g,' ') //remove any html style tagging, or twiml
-  
+
   return clean
 }
 
