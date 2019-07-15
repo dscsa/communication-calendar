@@ -15,7 +15,7 @@ function decodeDescription(raw){
   // Remove <br> AND \n that are not in quotes which are added by google calendar if user hand edits a google calendar json description
   var clean3 = clean2.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
-  var clean4 = clean3.replace(/[^\]\n/g, '') //15942: Hand edit of calendar can cause \n within quotes so remove those but not the \\n ones
+  var clean4 = clean3.replace(/[^\\]\n/g, '') //15942: Hand edit of calendar can cause \n within quotes so remove those but not the \\n ones
 
   // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
   var clean5 = clean4.replace(/<a href="mailto:.+?".*?>(.+?)<\/a>/g, '$1')
