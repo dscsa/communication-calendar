@@ -3,12 +3,6 @@
 function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
   
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
-
-  if(wouldSpam(event, cache, all_comms, timestamp, is_fallback)){
-    spamTagCal(event)
-    return
-  }
-  
   
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     
@@ -40,10 +34,11 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
     var fallbacks = obj.fallbacks ? JSON.stringify(obj.fallbacks) : ''
     var sms_arr = obj.sms ? obj.sms.toString().split(",") : []
     var call_arr = obj.call ? obj.call.toString().split(",") : []
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
     
     var text_message_content = cleanTextMessage(message_content,cache)
     
-    queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback, spam_limit)
 
     var call_message_content = cleanCallMessage(message_content,cache)
 
@@ -57,7 +52,7 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
 
 
 //Manages sending requests to Twilio, lining up the caching required to catch callbacks later
-function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
+function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback, spam_limit){
 
   var phone_num_arr = [] //use this to store all sids in one object, and create a linked bunch of caching values, that way we only go to fallbacks if all of them fail
 
@@ -70,7 +65,11 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       continue;
     }
     
-    if((code == 'call') && holdCall(phone_num,cache)) continue;  
+    if(((code == 'call') && holdCall(phone_num,cache))
+      || (wouldSpam("#" + code + "#",phone_num, message, cache, timestamp, spam_limit))){
+        spamTagCal(event)
+        continue;  
+    }
 
     var response = null
     var res = null
@@ -121,6 +120,13 @@ function processEmailObj(obj, cache, event, timestamp){
     
     var subject = obj.subject
     var body = obj.message
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
+
+    if(wouldSpam("#email#",recipient, body, cache, timestamp, spam_limit)){
+      spamTagCal(event)
+      return;
+    }
+      
 
     var from = ""
     var name = ""

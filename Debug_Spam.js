@@ -20,36 +20,24 @@ function emergencyEmail(subject,body){
 
 
 
-
-//Given a patient's name, checks the cache for how many objects have been processed for them so far
-//Set a limit in keys.gs of how many objects can be processed
-function wouldSpam(event, cache, comm_arr, timestamp, is_fallback){
+function wouldSpam(contact_type, addr, body, cache, timestamp, spam_limit){
   
-  if(~ event.getTitle().toString().toLowerCase().indexOf('password reset')) return false; //temporary shortcut before next milestone
+  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_SPAMPROOF_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
+
+  var res = false
+  var prev_contacts = getContactHistory(addr, cache)  || ''
   
-  var patient_name = extractNameFromEvent(event.getTitle());
-  
-  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_NAMES.indexOf(patient_name)) return false; //for debugging and general testing, don't worry about spamming ourselves
-
-  var event_id = event.getId();
-  
-  var prev_contacts = getContactHistory(patient_name,cache) || ''
-  var num_events = prev_contacts.split('Event ID').length
-
-  var would_be_spam = num_events > PER_PATIENT_EVENT_LIMIT //if we've hit their limit already
-
-  if(is_fallback) return would_be_spam; //don't go on to add duplicates to the message history, or send spam alert again  
-
-  var msg_history = prev_contacts + "<br><br>" + timestamp + ": " + patient_name + ": Event ID: " + event_id + "<br>Comm Arr:<br>" + JSON.stringify(comm_arr) 
+  var num_events = prev_contacts.split(contact_type).length - 1
+  res = num_events > spam_limit
     
-  if(would_be_spam) sendSpamAlertEmail(msg_history,patient_name);
-  if(num_events == (PER_PATIENT_EVENT_LIMIT - 1)) debugEmail('Processing last permissible event for patient','HOLD will be placed on ' + patient_name + 'if another event is processed soon.\nMsg history below\n' + msg_history.replace(/<br>/g,'\n'));
-   
-  updateContactHistory(patient_name, msg_history,cache)
+  var msg_history = prev_contacts + "<br><br>" + timestamp + " : " + contact_type + " : " + addr + "<br>" + body
 
-  return would_be_spam
-  
-  
+  updateContactHistory(addr, msg_history,cache)
+
+  if(res) sendSpamAlertEmail(msg_history, addr);
+  if(num_events == (spam_limit - 1)) debugEmail('Processing last permissible event for patient','HOLD will be placed on ' + addr + 'if another event is processed soon.\nMsg history below\n' + msg_history.replace(/<br>/g,'\n'));
+
+  return res
 }
 
 
@@ -60,13 +48,12 @@ function  extractTypeOfOutboundEmail(body){
   if(~ body.indexOf('Update for Order')) return '#update#'
 
   return '#basic_email#' //default?
-
 }
 
 
 
-function sendSpamAlertEmail(msg_history, name){
-  var alertEmail = 'HOLD placed on this patient: ' + name + '<br><br>The last element of the history below was blocked. See complete message history to identify issue.'
+function sendSpamAlertEmail(msg_history, addr){
+  var alertEmail = 'HOLD placed on this addr: ' + addr + '<br><br>The last element of the history below was blocked. See complete message history to identify issue.'
   alertEmail += '<br>History of contact:<br>'
   alertEmail += msg_history
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, 'Stop Spam', '', {htmlBody: alertEmail})
