@@ -1,5 +1,3 @@
-var LIVE_MODE = true
-
 var LIVE_SOD = 10 //in 24 hr time, the earliest hour we can make calls
 
 var LIVE_EOD = 18 //in 24 hr time, the last hour we can make calls

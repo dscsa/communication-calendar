@@ -15,7 +15,7 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
       processEmailObj(obj,cache, event, timestamp)
 
     } else if(obj.fax){
-      processFaxObj(obj,cache, event, timestamp)
+      processFaxObj(i,obj,cache, event, timestamp)
     }
     
   }
@@ -183,4 +183,78 @@ function processEmailObj(obj, cache, event, timestamp){
     debugEmail('Failure to process a email comm-object', JSON.stringify([e, obj]))
   }
 
+}
+
+
+
+function processFaxObj(index,obj,cache, event, timestamp){
+  
+  try{
+
+    if( ! obj.attachments) throw new Error("Fax comm-object must have an attachment array");
+    
+    var attachments = obj.attachments.toString().split(",")
+
+    var recipient = obj.fax
+    
+    if (recipient.length == 10) recipient = '1'+recipient
+
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
+    
+    if(recipient.trim().length == 0){ //don't try to process empty phone numbers --> stop us cascading with errors from shopping sheet
+      debugEmail('Comm-Obj w/o a Fax #', "Event ID: " + event.getId())
+      return;
+    }
+    
+    if(wouldSpam("#fax#",recipient, '', cache, timestamp, spam_limit)){
+      spamTagCal(event)
+      return;
+    }
+    
+    var from = ''
+    
+    if( ! obj.from ){
+
+      if(event.getOriginalCalendarId() == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
+        from = SECURE_DEFAULT_FAX_FROM
+      } else {
+        from = INSECURE_DEFAULT_FAX_FROM
+      }
+
+    } else {
+      from = obj.from
+    }
+    
+    var all_sent = true
+    
+    for(var i = 0; i < attachments.length; i++){
+      
+      var doc = DriveApp.getFileById(attachments[i])
+      
+      var pdf = doc.getAs(MimeType.PDF)
+
+      var res = sendSFax(recipient, from, pdf)
+
+      var success = res && res.isSuccess ? "External" : "Error External"
+      
+      if(~ success.indexOf("Error")){
+        all_sent = false
+      }
+
+    }
+    
+    if(all_sent){
+      
+      event.setTitle("FAXED " + event.getTitle())
+      
+    } else {
+      
+      markFailed(event,index)
+      if(obj.fallbacks) processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
+         
+    }
+    
+  } catch(e){
+    debugEmail('Failure to process a Fax comm-object', JSON.stringify([e, obj]))
+  }
 }
