@@ -11,14 +11,19 @@ Git clone this project. Clasp init that folder, and clasp push to your server.
 
 Main() triggers every minute. Checks all calendar events for the last minute. Looks to the description field for a comm-array.
 
-If events exist outside of SOD & EOD bounds, will push them to the next appropriate SOD on same calendar.
+If events exist outside of SOD & EOD bounds, will push them to the next appropriate SOD on same calendar UNLESS the comm-objects have 'workHours' property set to false.
 
 ## Comm-Arrays & Comm-Objects
 
 
 Comm-Array: An array of comm-objects
 
-Comm-Objects: A JSON with information for an outbound contact. Can be:
+Comm-Objects: A JSON with information for an outbound contact:
+
+      - All objects:
+            - Can have a 'workHours' field, set to either true or false. If false, then this event will be processed at its designated time, even if thats outside of business hours (as determined by SOD and EOD)
+            - Can have a 'spamLimit' field, set to a number. The contact cap is determined in Config.js, but if a comm-obj contains spamLimit property, that will override the contact cap. Can be set to a high number to bypass spam filtering.
+
 
       - Phone object:
 
@@ -50,7 +55,15 @@ Comm-Objects: A JSON with information for an outbound contact. Can be:
 
              - An 'attachments' field with a string of comma-separate GDrive file IDs that will be attached
 
-      - Fax object: TBD
+      - Fax object:
+
+             - Will send faxes via SFax integration
+
+             - Requires a 'fax' field as the recipient fax number
+
+             - Requires an 'attachments' array that contains GDrive file IDs. Each file will be sent as a fax.
+
+             - Optional 'from' field can specify what fax number it should be sent from
 
 Fallbacks: Any comm-object can have a 'fallbacks' property, which is a Comm-Arr that will be processed if the parent object fails
 
@@ -59,6 +72,13 @@ Fallbacks: Any comm-object can have a 'fallbacks' property, which is a Comm-Arr 
 ### Main
 
 The main function, that can be set to trigger regularly.
+
+### POST API
+
+Can accept POST requests at the web app url.
+
+#Create Events through POST Requests
+To use this, must create a ScriptProperty called api_pwd, and that must be included in the requests, along with 'title' for the event and 'body' which will go into location. Optional parameters: 'start' in UTC time string, and 'minutes' for length of the event.
 
 ### TextWork
 
@@ -88,7 +108,22 @@ Set up a test Google Sheet, deploy and set up the Key.gs with necessary constant
 2) Make sure LIVE_MODE in the test sheet is set to false
 3) Make sure main() is pulling from TEST_CAL_ID and not SECURE_CAL_ID
 
+###Debug-Spam Guard
 
-### Audio Playing
+Handles checking whether a given communciation event will spamm a user. Also handles debug emails, formatting and sending to appropriate addresses
 
-MVP of using pre-recorded audio. Useful for debugging or development, nothing in production
+###ProcessCommArr
+
+Handles taking a comm-arr and delegating & processing appropriately. Handles sms, call, and email. TODO: fax.
+
+###Cache
+
+Handles interactions with cache. The ScriptCache is used to track potential spam, store TwiML that needs to be served up by WebApp
+
+###ProcessQueuedEvents
+
+Script will check each event atleast twice: once to send to Twilio (queuing) and once to check the result (marking as TEXTED, CALLED, etc). If failed, will engage fallbacks. This is done as opposed to waiting on a webApp request from Twilio. Those often fail because of some issue between Twilio-Google.
+
+###Fax
+
+Contains necessary functions to sendfax from SFax. Uses the CryptoJS.js file to build our authentication token.

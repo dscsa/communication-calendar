@@ -10,7 +10,7 @@ function calendarCopier(){
   
   for(var i = 0; i < events_to_copy.length; i++){
     if(events_to_copy[i].getStartTime().getTime() >= oneMinuteBack.getTime()){
-      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED/g,''), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
+      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED|FAXED/g,''), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
     }
   }
 }
@@ -60,7 +60,7 @@ function getEventsToQueue(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
 

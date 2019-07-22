@@ -42,7 +42,7 @@ function main(){
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-07-09T15:15:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-07-17T15:15:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back,date_back)
 }
 

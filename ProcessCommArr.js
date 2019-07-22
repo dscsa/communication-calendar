@@ -3,12 +3,6 @@
 function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
   
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
-
-  if(wouldSpam(event, cache, all_comms, timestamp, is_fallback)){
-    spamTagCal(event)
-    return
-  }
-  
   
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     
@@ -21,7 +15,7 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
       processEmailObj(obj,cache, event, timestamp)
 
     } else if(obj.fax){
-      processFaxObj(obj,cache, event, timestamp)
+      processFaxObj(i,obj,cache, event, timestamp)
     }
     
   }
@@ -40,10 +34,11 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
     var fallbacks = obj.fallbacks ? JSON.stringify(obj.fallbacks) : ''
     var sms_arr = obj.sms ? obj.sms.toString().split(",") : []
     var call_arr = obj.call ? obj.call.toString().split(",") : []
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
     
     var text_message_content = cleanTextMessage(message_content,cache)
     
-    queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback)
+    queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback, spam_limit)
 
     var call_message_content = cleanCallMessage(message_content,cache)
 
@@ -57,7 +52,7 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
 
 
 //Manages sending requests to Twilio, lining up the caching required to catch callbacks later
-function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback){
+function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, event, timestamp, is_fallback, spam_limit){
 
   var phone_num_arr = [] //use this to store all sids in one object, and create a linked bunch of caching values, that way we only go to fallbacks if all of them fail
 
@@ -70,7 +65,11 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       continue;
     }
     
-    if((code == 'call') && holdCall(phone_num,cache)) continue;  
+    if(((code == 'call') && holdCall(phone_num,cache))
+      || (wouldSpam("#" + code + "#",phone_num, message, cache, timestamp, spam_limit))){
+        spamTagCal(event)
+        continue;  
+    }
 
     var response = null
     var res = null
@@ -121,6 +120,13 @@ function processEmailObj(obj, cache, event, timestamp){
     
     var subject = obj.subject
     var body = obj.message
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
+
+    if(wouldSpam("#email#",recipient, body, cache, timestamp, spam_limit)){
+      spamTagCal(event)
+      return;
+    }
+      
 
     var from = ""
     var name = ""
@@ -177,4 +183,78 @@ function processEmailObj(obj, cache, event, timestamp){
     debugEmail('Failure to process a email comm-object', JSON.stringify([e, obj]))
   }
 
+}
+
+
+
+function processFaxObj(index,obj,cache, event, timestamp){
+  
+  try{
+
+    if( ! obj.attachments) throw new Error("Fax comm-object must have an attachment array");
+    
+    var attachments = obj.attachments.toString().split(",")
+
+    var recipient = obj.fax
+    
+    if (recipient.length == 10) recipient = '1'+recipient
+
+    var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
+    
+    if(recipient.trim().length == 0){ //don't try to process empty phone numbers --> stop us cascading with errors from shopping sheet
+      debugEmail('Comm-Obj w/o a Fax #', "Event ID: " + event.getId())
+      return;
+    }
+    
+    if(wouldSpam("#fax#",recipient, '', cache, timestamp, spam_limit)){
+      spamTagCal(event)
+      return;
+    }
+    
+    var from = ''
+    
+    if( ! obj.from ){
+
+      if(event.getOriginalCalendarId() == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
+        from = SECURE_DEFAULT_FAX_FROM
+      } else {
+        from = INSECURE_DEFAULT_FAX_FROM
+      }
+
+    } else {
+      from = obj.from
+    }
+    
+    var all_sent = true
+    
+    for(var i = 0; i < attachments.length; i++){
+      
+      var doc = DriveApp.getFileById(attachments[i])
+      
+      var pdf = doc.getAs(MimeType.PDF)
+
+      var res = sendSFax(recipient, from, pdf)
+
+      var success = res && res.isSuccess ? "External" : "Error External"
+      
+      if(~ success.indexOf("Error")){
+        all_sent = false
+      }
+
+    }
+    
+    if(all_sent){
+      
+      event.setTitle("FAXED " + event.getTitle())
+      
+    } else {
+      
+      markFailed(event,index)
+      if(obj.fallbacks) processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
+         
+    }
+    
+  } catch(e){
+    debugEmail('Failure to process a Fax comm-object', JSON.stringify([e, obj]))
+  }
 }
