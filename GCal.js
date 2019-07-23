@@ -47,6 +47,10 @@ function spamTagCal(event){
   event.setTitle('SPAM-STOPPED  - ' + event.getTitle())
 }
 
+function markStopped(event){
+  event.setTitle('BLACKLIST-STOPPED  - ' + event.getTitle())
+}
+
 
 //Get events that haven't yet been touched, and will need to be queued up
 function getEventsToQueue(calendar_id, startTimeDate){

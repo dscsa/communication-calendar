@@ -85,9 +85,16 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
     }
 
     if(response.getResponseCode() != 201){
+      
+      var res_obj = JSON.parse(response.getContentText())
+      if(res_obj.code == 21610) return markStopped(event, is_fallback, parent_index,index); //this means they've replied 'STOP'
+      
       return debugEmail('Failed request to Twilio', 'Failed to send a request to Twilio\n\n' + phone_num + '\n' + '\n' + response.getResponseCode() + '\n' + response.getContentText()) //For now, let's see what parts actually give us errors, and which ones
+
     } else {
+
       res = JSON.parse(response.getContentText())
+
     }
     
     markQueued(event,is_fallback,parent_index,index)
