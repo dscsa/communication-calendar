@@ -75,7 +75,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
     var res = null
 
     if(code == 'sms'){
-      
+
       response = sendSms(phone_num,message)
       
     } else if(code == 'call'){
