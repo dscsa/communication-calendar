@@ -127,6 +127,8 @@ function shiftEvents(events){
   for(var i = 0; i < events.length; i++){
     var event = events[i]
 
+    var event_length =  event.getEndTime().getTime() - event.getStartTime().getTime()
+    
     //If it's before start of day, you want to move the event to SOD same day
     //If it's after SOD, but you get here, then it must be passed EOD, so you want to move the event to SOD of next day
     var start = new Date()
@@ -137,7 +139,7 @@ function shiftEvents(events){
     start.setMinutes(0)
     start.setSeconds(0)
 
-    event.setTime(start, new Date(start.getTime() + (60 * 1000)))
+    event.setTime(start, new Date(start.getTime() + event_length))
 
   }
 }
