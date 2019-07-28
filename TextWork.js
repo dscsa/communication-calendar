@@ -16,19 +16,29 @@ function decodeDescription(raw){
 
   var clean3 = clean2.replace(/”|“/g, '"') //replace smart quotes because they might be needed for JSON
 
+  var clean4 = clean3.replace(/’/g, "'")
+
   // Remove <br> AND \n AND whitespace that are not in quotes which are added by google calendar if user hand edits a google calendar json description
-  var clean4 = clean3.replace(/(<br>|\n|\s)(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
+  var clean5 = clean4.replace(/(<br>|\n|\s)(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
-  var clean5 = clean4.replace(/[^\\]\n/g, '') //15942: Hand edit of calendar can cause \n within quotes so remove those but not the \\n ones
+  //Hand edit of calendar can cause "control characters" to be added by Google
+  //https://stackoverflow.com/questions/4253367/how-to-escape-a-json-string-containing-newline-characters-using-javascript
+  var clean6 = clean5
+    .replace(/[\\]/g, '\\\\')
+    .replace(/[\b]/g, '\\b')
+    .replace(/[\f]/g, '\\f')
+    .replace(/[\n]/g, '\\n')
+    .replace(/[\r]/g, '\\r')
+    .replace(/[\t]/g, '\\t');
 
-  // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
-  var clean6 = clean5.replace(/<a *href="mailto:.+?".*?>(.+?)<\/a>/g, '$1')
+  //Remove any auto-inserted hyperlinks which we detect because of they will have unescaped quotes
+  var clean7 = clean6.replace(/<a *href=".+?".*?>(.+?)<\/a>|/g, '$1')
 
-  var clean7 = clean6.replace(/<u><\/u>/g, '') //not sure why good inserts these
+  var clean8 = clean7.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  debugEmail('decodeDescription', 'raw: '+raw+', clean0: '+clean0+', clean1: '+clean1+', clean2: '+clean2+', clean3: '+clean3+', clean4: '+clean4+', clean5: '+clean5+', clean6: '+clean6+', clean7: '+clean7)
+  debugEmail('decodeDescription', 'raw: '+raw+', clean0: '+clean0+', clean1: '+clean1+', clean2: '+clean2+', clean3: '+clean3+', clean4: '+clean4+', clean5: '+clean5+', clean6: '+clean6+', clean7: '+clean7+', clean8: '+clean8)
 
-  return clean7
+  return clean8
 }
 
 
