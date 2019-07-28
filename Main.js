@@ -76,7 +76,7 @@ function coordinateProcessing(code,arr_events,cache){
    try {
       comm_arr = JSON.parse(description)
    } catch (e) {
-      debugEmail('Failure to process a comm-array', e.message+' 'description)
+      debugEmail('Failure to process a comm-array', e.message+' | '+description+' | '+Utilities.base64Encode(description))
       continue
    }
 
