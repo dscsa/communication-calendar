@@ -4,29 +4,42 @@ function decodeDescription(raw){
   raw = raw.trim()
 
   try {
-    var clean1 = decodeURIComponent(raw)
+    var clean0 = decodeURIComponent(raw)
   } catch (e) {
     debugEmail('decodeDescription decodeURI Error', JSON.stringify([raw, e]))
-    var clean1 = raw
+    var clean0 = raw
   }
 
-  var clean2 = decodeEntities(clean1)
+  var clean1 = decodeEntities(clean0)
 
-  // Remove <br> AND \n that are not in quotes which are added by google calendar if user hand edits a google calendar json description
-  var clean3 = clean2.replace(/(<br>|\n| )(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
+  var clean2 = clean1.replace(/^[^\[]*|^\[]*$/, '') //Remove anything before the first [ or after the last ]
 
-  var clean4 = clean3.replace(/[^\\]\n/g, '') //15942: Hand edit of calendar can cause \n within quotes so remove those but not the \\n ones
+  var clean3 = clean2.replace(/”|“/g, '"') //replace smart quotes because they might be needed for JSON
 
-  // Remove mailto links which are added by google calendar if user hand edits a google calendar json description
-  var clean5 = clean4.replace(/<a href="mailto:.+?".*?>(.+?)<\/a>/g, '$1')
+  var clean4 = clean3.replace(/’/g, "'")
 
-  var clean6 = clean5.replace(/<u><\/u>/g, '') //not sure why good inserts these
+  // Remove <br> AND \n AND whitespace that are not in quotes which are added by google calendar if user hand edits a google calendar json description
+  var clean5 = clean4.replace(/(<br>|\n|\s)(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
-  //debugEmail('decodeDescription', JSON.stringify({raw:raw, clean1:clean1, clean2:clean2, clean2:clean3, clean4:clean4, clean5:clean5}, null, '  '))
+  //Hand edit of calendar can cause "control characters" to be added by Google
+  //https://stackoverflow.com/questions/4253367/how-to-escape-a-json-string-containing-newline-characters-using-javascript
+  var clean6 = clean5
+    //.replace(/[\\]/g, '\\\\')
+    .replace(/[\b]/g, '\\b')
+    .replace(/[\f]/g, '\\f')
+    .replace(/[\n]/g, '\\n')
+    .replace(/[\r]/g, '\\r')
+    .replace(/[\t]/g, '\\t');
 
-  return clean6
+  //Remove any auto-inserted hyperlinks which we detect because of they will have unescaped quotes
+  var clean7 = clean6.replace(/<a *href=".+?".*?>(.+?)<\/a>|/g, '$1')
+
+  var clean8 = clean7.replace(/<u><\/u>/g, '') //not sure why good inserts these
+
+  debugEmail('decodeDescription', 'raw: '+raw+', clean0: '+clean0+', clean1: '+clean1+', clean2: '+clean2+', clean3: '+clean3+', clean4: '+clean4+', clean5: '+clean5+', clean6: '+clean6+', clean7: '+clean7+', clean8: '+clean8)
+
+  return clean8
 }
-
 
 //Remove HTML encoding
 function decodeEntities(encodedString) {
