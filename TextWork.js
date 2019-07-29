@@ -24,7 +24,7 @@ function decodeDescription(raw){
   //Hand edit of calendar can cause "control characters" to be added by Google
   //https://stackoverflow.com/questions/4253367/how-to-escape-a-json-string-containing-newline-characters-using-javascript
   var clean6 = clean5
-    .replace(/[\\]/g, '\\\\')
+    //.replace(/[\\]/g, '\\\\')
     .replace(/[\b]/g, '\\b')
     .replace(/[\f]/g, '\\f')
     .replace(/[\n]/g, '\\n')
@@ -40,7 +40,6 @@ function decodeDescription(raw){
 
   return clean8
 }
-
 
 //Remove HTML encoding
 function decodeEntities(encodedString) {
