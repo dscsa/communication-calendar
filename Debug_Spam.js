@@ -19,10 +19,44 @@ function emergencyEmail(subject,body){
 }
 
 
+//Checks if addr is an email address, or array of email addresses
+//and checks all addresses against a list of SPAMPROOF_DOMAINS or PRODUCTION_SPAMPROOF_EMAIL
+//If all emails are internal, then return true
+//if >= one is external, then it should be subject to spam filter rules
+function excludedEmail(addr){
+  
+  if(! (~ addr.indexOf("@"))) return false //quick reject for non-emails
+  
+  var emails = addr.split(",") //in case there are multiple, all must be spamproof for it to return true
+  
+  for(var n = 0; n < emails.length; n++){
+
+    if(emails[n].trim().length > 0){
+
+      if(~ PRODUCTION_SPAMPROOF_EMAIL.indexOf(emails[n].trim())) continue; //autoapprove hardcoded emails
+      
+      var rx = /@.+/
+      var res = rx.exec(emails[n].trim())
+      
+      if(res){
+
+        if(!(~ SPAMPROOF_DOMAINS.indexOf(res[0]))) return false //if even one isn't spamproof, spamrules apply
+        
+      } else {
+
+        return false //if one is non-empty but not a parseable email, then spamrules apply
+        
+      }
+    }
+  }
+
+  return true
+
+}
 
 function wouldSpam(contact_type, addr, body, cache, timestamp, spam_limit){
   
-  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || ~ PRODUCTION_SPAMPROOF_EMAIL.indexOf(addr.trim())) return false; //for debugging and general testing, don't worry about spamming ourselves
+  if( (!LIVE_MODE) || ~ PRODUCTION_SPAMPROOF_PHONE.indexOf(addr.trim()) || excludedEmail(addr)) return false; //for debugging and general testing, don't worry about spamming ourselves
 
   var res = false
   var prev_contacts = getContactHistory(addr, cache)  || ''

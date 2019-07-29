@@ -56,38 +56,51 @@ function handleFallbacks(comm_arr, title,event,cache){
 //Checking results, and tagging appropriately and/or calling processCommArr on fallbacks
 function handleTwilioObjects(index,obj, event,cache){
     
-    var code = obj.sms ? 'sms' : 'call'
+  var code = obj.sms ? 'sms' : 'call'
+  
+  var phone_nums = obj[code].split(",")
+  
+  var any_success = false
+
+  for(var n = 0; n < phone_nums.length; n++){
     
-    var phone_nums = obj[code].split(",")
+    var num = phone_nums[n].replace(/\D/g,'').trim()
 
-    for(var n = 0; n < phone_nums.length; n++){
-      
-      var num = phone_nums[n].replace(/\D/g,'').trim()
+    var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
+    
+    var raw_res = fetchResource(sid,code)
+    
+    var twilio_res = null
 
-      var sid = code == 'sms' ? pullFromCache(STORED_MESSAGE_SID,num,cache) : pullFromCache(STORED_CALL_SID,num,cache)
-      
-      var raw_res = fetchResource(sid,code)
-      
-      var twilio_res = null
-
-      if(raw_res.getResponseCode() != 200){
-        return debugEmail('Failed request to fetchResource', 'Failed to send a request to Twilio\n\n' + num + '\n' + '\n' + raw_res.getResponseCode() + '\n' + raw_res.getContentText()) //For now, let's see what parts actually give us errors, and which ones
-      } else {
-        twilio_res = JSON.parse(raw_res.getContentText())
-      }
-
-      var status = twilio_res.status
-
-      if((status == 'delivered') || (status == 'completed')){ 
-        
-        markSuccess(event,index,code) //only handled on the first number --> we only need one
-        break;
-        
-      } else if((status == 'failed') || (status == 'undelivered')){
-        
-        markFailed(event,index)
-        if((n == phone_nums.length -1) && (obj.fallbacks)) processCommArr(obj.fallbacks, event, true, cache, index) //send to processcomarr along with index of parent, so it can note appropriately 
-         
-      }
+    if(raw_res.getResponseCode() != 200){
+      return debugEmail('Failed request to fetchResource', 'Failed to send a request to Twilio\n\n' + num + '\n' + '\n' + raw_res.getResponseCode() + '\n' + raw_res.getContentText()) //For now, let's see what parts actually give us errors, and which ones
+    } else {
+      twilio_res = JSON.parse(raw_res.getContentText())
     }
+
+    var status = twilio_res.status
+
+    if((status == 'delivered') || (status == 'completed')){ 
+      
+      any_success = true
+      break; //don't check any of the other numbers, doesn't matter
+      
+    } else if((status == 'failed') || (status == 'undelivered')){
+      
+      if((n == phone_nums.length -1) && (obj.fallbacks)) processCommArr(obj.fallbacks, event, true, cache, index); //send to processcomarr along with index of parent, so it can note appropriately 
+       
+    }
+    
+  }
+  
+  if(any_success){
+    
+    markSuccess(event,index,code) //only handled on the first number --> we only need one
+  
+  } else {
+  
+    markFailed(event,index)
+  
+  }
+  
 }
