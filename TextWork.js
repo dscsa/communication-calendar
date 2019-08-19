@@ -97,8 +97,8 @@ function cleanCallMessage(raw, cache) {
   console.log('cleanPhoneMessage: raw: '+raw+'\n\n clean:'+clean)
 
   //repeat message 3x
-  var toRepeat = '</Say><Pause length="2"/><Say>this message will now repeat.</Say><Pause length="4"/><Say>'
-  clean = clean + toRepeat + clean + toRepeat +clean +  '</Say><Pause length="2"/><Say>Good Bye'
+  var toRepeat = '</Say><Pause length="2"/><Say>This is an automated message. You can now hang up. This messsage will now repeat if you need to hear it again.</Say><Pause length="4"/><Say>'
+  clean = clean + toRepeat + clean +  '</Say><Pause length="2"/><Say>Good Bye'
   clean = '<?xml version="1.0" encoding="UTF-8"?><Response><Say>' + clean + '</Say></Response>'
 
   return clean
