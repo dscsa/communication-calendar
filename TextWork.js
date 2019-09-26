@@ -97,8 +97,8 @@ function cleanCallMessage(raw, cache) {
   console.log('cleanPhoneMessage: raw: '+raw+'\n\n clean:'+clean)
 
   //repeat message 3x
-  var toRepeat = '</Say><Pause length="2"/><Say>this message will now repeat.</Say><Pause length="4"/><Say>'
-  clean = clean + toRepeat + clean + toRepeat +clean +  '</Say><Pause length="2"/><Say>Good Bye'
+  var toRepeat = '</Say><Pause length="2"/><Say>This is an automated message. You can now hang up. This messsage will now repeat if you need to hear it again.</Say><Pause length="4"/><Say>'
+  clean = clean + toRepeat + clean +  '</Say><Pause length="2"/><Say>Good Bye'
   clean = '<?xml version="1.0" encoding="UTF-8"?><Response><Say>' + clean + '</Say></Response>'
 
   return clean
@@ -185,7 +185,9 @@ function eventString(events) {
   }
 }
 
-
+function testExt(){
+  Logger.log(extractFallbackTags("FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 QUEUED-0-0 FAILED-0-0 QUEUED-0-0 EMAILED QUEUED-0 QUEUED-0 15571 Refill Reminder: Lisa ROSS 1972-04-29.  Created:Wed Jul 03 2019 17:37:47 GMT-0400 (EDT)"))
+}
 
 //For recognizng from the title, what part of an event should be checked -----
 function extractFallbackTags(str){

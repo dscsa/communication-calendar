@@ -166,8 +166,10 @@ function processEmailObj(index, obj, cache, event, timestamp){
     var recipient_arr = recipient.split(",")
     var any_success = false
     
+    var bcc = obj.bcc ? obj.bcc + ((event.getOriginalCalendarId() != SECURE_CAL_ID) ? "," + SECURE_BCC_ADDR : "") : SECURE_BCC_ADDR
+
     for(var i = 0; i < recipient_arr.length; i++){
-      var response = sendEmail(subject, recipient_arr[i], body, attachments, from, name, from, obj.cc, obj.bcc)
+      var response = sendEmail(subject, recipient_arr[i], body, attachments, from, name, from, obj.cc, bcc)
 
       if(response.errors){
         debugEmail('Error from SendGrid', "Event ID: " + event.getId() + "\n" + response.errors)

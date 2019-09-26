@@ -67,7 +67,7 @@ function getEventsToQueue(calendar_id, startTimeDate){
     if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
   }
-
+  Logger.log(res)
   return res
 
 }

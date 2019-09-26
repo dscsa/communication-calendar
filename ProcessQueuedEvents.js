@@ -61,7 +61,8 @@ function handleTwilioObjects(index,obj, event,cache){
   var phone_nums = obj[code].split(",")
   
   var any_success = false
-
+  var num_failures = 0
+  
   for(var n = 0; n < phone_nums.length; n++){
     
     var num = phone_nums[n].replace(/\D/g,'').trim()
@@ -87,20 +88,19 @@ function handleTwilioObjects(index,obj, event,cache){
       
     } else if((status == 'failed') || (status == 'undelivered')){
       
-      if((n == phone_nums.length -1) && (obj.fallbacks)) processCommArr(obj.fallbacks, event, true, cache, index); //send to processcomarr along with index of parent, so it can note appropriately 
+      num_failures += 1
+      
+      if((n == phone_nums.length -1) && (num_failures == phone_nums.length)){ //if its the last of the numbers, and all others have failed, then mark failed and engage callbacks
+        markFailed(event,index)
+        if(obj.fallbacks) processCommArr(obj.fallbacks, event, true, cache, index); //send to processcomarr along with index of parent, so it can note appropriately 
+      }
        
     }
     
   }
   
   if(any_success){
-    
-    markSuccess(event,index,code) //only handled on the first number --> we only need one
-  
-  } else {
-  
-    markFailed(event,index)
-  
+    markSuccess(event,index,code)
   }
   
 }

@@ -1,7 +1,7 @@
 //Regularly triggered main function that handles integration
 //between Calendar and Twilio
 function main(){
-
+  
   var lock = LockService.getScriptLock()
 
   try{
@@ -20,7 +20,8 @@ function main(){
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
 
     processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
-    //processEvents(INSECURE_CAL_ID,oneMinuteBack)
+    Logger.log("Checking Insecure Calendar")
+    processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan)
 
   } catch (e) {
     debugEmail('main','error: '+e.message+' '+e.stack)
@@ -42,7 +43,7 @@ function main(){
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-07-17T15:15:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-08-20T15:00:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back,date_back)
 }
 
@@ -67,7 +68,6 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
 function coordinateProcessing(code,arr_events,cache){
 
  for(var i = 0; i < arr_events.length; i++){
-
    var description = arr_events[i].getDescription()
    description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
 
