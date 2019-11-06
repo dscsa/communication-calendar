@@ -16,7 +16,7 @@ function main(){
   try {
 
     var now = new Date();
-    var oneMinuteBack = new Date(now.getTime() - (60 * 1000));
+    var oneMinuteBack = new Date(now.getTime() - (2* 60 * 1000)); //OS expanded this 10/1 bc maybe theres some events created with a little lag
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
 
     processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
@@ -43,7 +43,7 @@ function main(){
 
 //Specify the start time of a test event here, use for debugging
 function testMain(){
-  var date_back = new Date('2019-08-20T15:00:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
+  var date_back = new Date('2019-10-03T21:30:00Z') //specifiy time here in UTC (east coast plus 4 w/o daylight savings)
   processEvents(TEST_CAL_ID,date_back,date_back)
 }
 

@@ -164,14 +164,15 @@ function lookupFileName(filename, cache){
   return file.getId()
 }
 
-function testrx(){
-  Logger.log(extractNameFromEvent("15396 Order Created: Kathy BERENATO 1965-01-17.  Created:Thu Jun 27 2019 20:28:30 GMT-0400 (EDT)"))
+function testnamegrab(){
+  Logger.log(extractNameFromEvent("TEXTED  EMAILED 19703 Order Updated: Kenneth FULLER 1967-01-12.  Created:Wed Oct 02 2019 18:28:57 GMT-0400 (EDT)"))
 }
 
 function extractNameFromEvent(title){
-  var rx = /: (.+?) (19|20)\d{2}-\d{2}-\d{2}.  Created/
+  var rx = /: (.+? (19|20)\d{2}-\d{2}-\d{2}).  Created/
   var res = rx.exec(title.toString().trim())
-  return res[1].toLowerCase().trim();
+  if(res == null) return ""
+  return res[1].trim();
 }
 
 

@@ -17,6 +17,32 @@ function calendarCopier(){
 
 
 
+//Only use for transition from old GCal to new one
+//run every morning to sync up our calendars
+//Set to trigger, but should be removed eventually. Will be pinging me until then
+function syncCals(){
+  
+  MailApp.sendEmail("omar@sirum.org", "Check that the calendar syncing is working", "")
+  
+  var old_cal = CalendarApp.getCalendarById("sirum.org_k8j983q66k1t6gvgg59t0amq0k@group.calendar.google.com")
+  var new_cal = CalendarApp.getCalendarById(SECURE_CAL_ID)
+  
+  
+  var start = new Date();
+  start.setHours(0,0,0,0); //set to all zeroes
+  
+  var end = new Date();
+  end.setHours(23,59,59,999);
+  
+  var events_to_copy = old_cal.getEvents(start, end)
+  
+  for(var i = 0; i < events_to_copy.length; i++){
+    new_cal.createEvent(events_to_copy[i].getTitle(), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
+    if(i % 20 == 0) Utilities.sleep(2000)
+  }
+}
+
+
 
 
 function markFailed(event,index){
@@ -29,9 +55,15 @@ function markFailed(event,index){
 
 function markSuccess(event,index,code){
   var title = event.getTitle()
+  Logger.log(title)
+  var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
+  
   title = title.replace('QUEUED-' + index, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
+  
   event.setTitle(title)
-            
+  Logger.log(contact_name)
+  event.setLocation(contact_name) //useful for our salesforce integration
+  
 }
 
 
