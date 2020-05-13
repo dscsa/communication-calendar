@@ -5,10 +5,12 @@ function main(){
   var lock = LockService.getScriptLock()
 
   try{
-    lock.waitLock(1000) //if we don't have the lock
+    lock.waitLock(10000) //if we don't have the lock
   } catch(e) {
     //debugEmail('Could not acquire lock in main','Probably linked to the sporadic lock.releaselock() issue. Put lock.relaseLock() into a try-catch as per this: https://stackoverflow.com/questions/53277135/there-are-too-many-lockservice-operations-against-the-same-script')
     console.log("Could not get script lock");
+    debugEmail('could not get script lock in main','')
+    //return
   }
 
   Logger.log("Running Main")
@@ -21,7 +23,7 @@ function main(){
 
     processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     Logger.log("Checking Insecure Calendar")
-    processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan)
+    processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan) //for Bertha stuff
 
   } catch (e) {
     debugEmail('main','error: '+e.message+' '+e.stack)
@@ -59,15 +61,17 @@ function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
   var queued_events = getQueuedEvents(calendar_id,timeAlreadyQueued)
 
   var cache = CacheService.getScriptCache()
-
   coordinateProcessing(0,events_to_queue,cache)
   coordinateProcessing(1,queued_events,cache)
 }
 
 
 function coordinateProcessing(code,arr_events,cache){
-
+  
+ if(!code) console.log('events to queue: ' + arr_events.join(","))
+ 
  for(var i = 0; i < arr_events.length; i++){
+   
    var description = arr_events[i].getDescription()
    description = decodeDescription(description) //description field will be url-encoded html and needs to be processed
 
@@ -80,14 +84,17 @@ function coordinateProcessing(code,arr_events,cache){
       continue
    }
 
-   if(shouldShift(comm_arr, arr_events[i])) continue;
+   if(shouldShift(comm_arr, arr_events[i])){
+     unlockEvent(arr_events[i])
+     continue;
+   }
 
    if(code){
-     console.log('revisiting event')
+     console.log('revisiting event: ' + arr_events[i].getTitle())
      processQueuedEvent(comm_arr, arr_events[i], cache) //check status of queued objects, and potentially engage fallbacks
 
    } else {
-     console.log('processing event for first time')
+     console.log('processing event for first time: ' + arr_events[i].getTitle())
      processCommArr(comm_arr, arr_events[i], false, cache) //directly handle the event, it hasn't been queued
    }
 

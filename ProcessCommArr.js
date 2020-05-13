@@ -16,11 +16,28 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
 
     } else if(obj.fax){
       processFaxObj(i,obj,cache, event, timestamp)
+    
+    } else if(obj.contact && obj.subject && obj.body){
+      processSFObj(i,obj,cache,event,timestamp)
+      
     }
     
   }
 }
 
+function processSFObj(index, comm_obj, cache, event, timestamp){
+  
+  console.log("processed Salesforce object")
+  console.log(comm_obj)
+  Logger.log("processing SF object")
+  Logger.log(comm_obj)
+  
+  var cleaned = comm_obj
+  //process the object and print it out cleanly somewhere SF can easily extract it
+  
+  debugEmail("Processed Salesforce Object",JSON.stringify(cleaned))
+  
+}
 
 //All phone communications will go through Twilio's API
 function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_fallback){
@@ -180,7 +197,7 @@ function processEmailObj(index, obj, cache, event, timestamp){
     }
             
     if(any_success){
-      event.setTitle("EMAILED " + event.getTitle())
+      event.setTitle("EMAILED " + event.getTitle().replace('LOCKED ',''))
     } else {
       markFailed(event,index)
       if(obj.fallbacks) processCommArr(obj.fallbacks, event, true, cache, index)

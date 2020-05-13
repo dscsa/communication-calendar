@@ -36,7 +36,7 @@ function decodeDescription(raw){
 
   var clean8 = clean7.replace(/<u><\/u>/g, '') //not sure why good inserts these
 
-  debugEmail('decodeDescription', 'raw: '+raw+', clean0: '+clean0+', clean1: '+clean1+', clean2: '+clean2+', clean3: '+clean3+', clean4: '+clean4+', clean5: '+clean5+', clean6: '+clean6+', clean7: '+clean7+', clean8: '+clean8)
+  //debugEmail('decodeDescription', 'raw: '+raw+', clean0: '+clean0+', clean1: '+clean1+', clean2: '+clean2+', clean3: '+clean3+', clean4: '+clean4+', clean5: '+clean5+', clean6: '+clean6+', clean7: '+clean7+', clean8: '+clean8)
 
   return clean8
 }
@@ -164,14 +164,17 @@ function lookupFileName(filename, cache){
   return file.getId()
 }
 
-function testnamegrab(){
-  Logger.log(extractNameFromEvent("TEXTED  EMAILED 19703 Order Updated: Kenneth FULLER 1967-01-12.  Created:Wed Oct 02 2019 18:28:57 GMT-0400 (EDT)"))
-}
 
 function extractNameFromEvent(title){
   var rx = /: (.+? (19|20)\d{2}-\d{2}-\d{2}).  Created/
   var res = rx.exec(title.toString().trim())
-  if(res == null) return ""
+  
+  if(res == null){ //then try to see if its only the name-dob format
+    rx  = /(\S+? \S+? \d{4}-\d{2}-\d{2})/
+    res = rx.exec(title.toString().trim())
+    if(res == null) return ""
+  }
+  
   return res[1].trim();
 }
 
@@ -184,10 +187,6 @@ function eventString(events) {
   function reduce(s, event) {
     return s+event.getStartTime()+': '+event.getTitle()+', '+event.getDescription()+'; '
   }
-}
-
-function testExt(){
-  Logger.log(extractFallbackTags("FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 FAILED-0-0 QUEUED-0-0 FAILED-0-0 QUEUED-0-0 EMAILED QUEUED-0 QUEUED-0 15571 Refill Reminder: Lisa ROSS 1972-04-29.  Created:Wed Jul 03 2019 17:37:47 GMT-0400 (EDT)"))
 }
 
 //For recognizng from the title, what part of an event should be checked -----

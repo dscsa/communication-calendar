@@ -20,8 +20,9 @@ function calendarCopier(){
 //Only use for transition from old GCal to new one
 //run every morning to sync up our calendars
 //Set to trigger, but should be removed eventually. Will be pinging me until then
+//On 11/22/19 AS disabled the trigger for this
 function syncCals(){
-  
+  return //TODO if ever needed, remove this. adding to be super sure
   MailApp.sendEmail("omar@sirum.org", "Check that the calendar syncing is working", "")
   
   var old_cal = CalendarApp.getCalendarById("sirum.org_k8j983q66k1t6gvgg59t0amq0k@group.calendar.google.com")
@@ -67,11 +68,18 @@ function markSuccess(event,index,code){
 }
 
 
+function markLocked(event){
+  event.setTitle('LOCKED ' + event.getTitle())
+}
+
+function unlockEvent(event){
+  event.setTitle(event.getTitle().replace('LOCKED',''))
+}
     
 function markQueued(event,is_fallback,parent_index,index){
     var title_tag = 'QUEUED-'
     title_tag += is_fallback ? parent_index + '-' + index : index
-    event.setTitle(title_tag + ' ' + event.getTitle())
+    event.setTitle(title_tag + ' ' + event.getTitle().replace('LOCKED ',''))
 }
 
 
@@ -96,8 +104,18 @@ function getEventsToQueue(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
-    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i]) //only take events that STARTED a minute ago
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf('LOCKED') || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
+    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()){
+      console.log('locking event: ' + raw_events[i].getTitle())
+      try{
+        markLocked(raw_events[i]) //mark it as locked now so we don't touch it again if this run takes more than one minute
+      } catch(err){ //if you get an error, then it's the quota of too-fast event manipulation, so stop here and return
+        console.log("error when locking: " + JSON.stringify(err))
+        MailApp.sendEmail('aminata@sirum.org','HIT THE QUOTA ISSUE','')
+        break
+      }
+      res.push(raw_events[i]) //only take events that STARTED a minute ago
+    }
   }
   Logger.log(res)
   return res
