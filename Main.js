@@ -18,12 +18,16 @@ function main(){
   try {
 
     var now = new Date();
-    var oneMinuteBack = new Date(now.getTime() - (2* 60 * 1000)); //OS expanded this 10/1 bc maybe theres some events created with a little lag
+    var oneMinuteBack = new Date(now.getTime() - (2* 60 * 1000));
+    var fifteenMinutesBack = new Date(now.getTime() - (15* 60 * 1000));
+    
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
 
     processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
     Logger.log("Checking Insecure Calendar")
     processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan) //for Bertha stuff
+    Logger.log("checking thunder calendar")
+    processEvents(THUNDER_CAL_ID,fifteenMinutesBack,queueTimeSpan)  //TODO activate this
 
   } catch (e) {
     debugEmail('main','error: '+e.message+' '+e.stack)

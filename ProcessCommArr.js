@@ -4,6 +4,12 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
   
   var timestamp = Utilities.formatDate(new Date(), "GMT-04:00", "MM-dd-yyyy HH:mm:ss");
   
+  var sf_object = extractSFObj(all_comms)
+  
+  if((all_comms.length == 1) && (sf_object.length > 0)){ //then it's composed entirely of a sf comm object
+    markSuccess(event,null,null, sf_object)
+  }
+  
   for(var i = 0; i < all_comms.length; i++){ //any event may have multiple parallel communications to perform
     
     var obj = all_comms[i] //each obj can be processed in parallel, no regard for the other
@@ -12,31 +18,25 @@ function processCommArr(all_comms, event, is_fallback, cache, parent_index) {
       processPhoneObject(i,parent_index,obj,cache, event, timestamp, is_fallback)
 
     } else if(obj.email){ //an email object
-      processEmailObj(i, obj,cache, event, timestamp)
+      processEmailObj(i, obj,cache, event, timestamp, sf_object, all_comms.length) //TODO pass sf object only if its a pure email + sf object
 
     } else if(obj.fax){
-      processFaxObj(i,obj,cache, event, timestamp)
+      processFaxObj(i,obj,cache, event, timestamp) //TODO pass sf object at a later time
     
-    } else if(obj.contact && obj.subject && obj.body){
-      processSFObj(i,obj,cache,event,timestamp)
-      
-    }
+    } 
     
   }
 }
 
-function processSFObj(index, comm_obj, cache, event, timestamp){
-  
-  console.log("processed Salesforce object")
-  console.log(comm_obj)
-  Logger.log("processing SF object")
-  Logger.log(comm_obj)
-  
-  var cleaned = comm_obj
-  //process the object and print it out cleanly somewhere SF can easily extract it
-  
-  debugEmail("Processed Salesforce Object",JSON.stringify(cleaned))
-  
+function extractSFObj(comm_arr){
+  var obj_string = ''
+  for(var i = 0; i < comm_arr.length; i++){
+    var obj = comm_arr[i]
+    if(obj.contact && obj.subject && obj.body){
+      obj_string = JSON.stringify(obj)
+    }
+  }
+  return obj_string
 }
 
 //All phone communications will go through Twilio's API
@@ -105,7 +105,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
       
       var res_obj = JSON.parse(response.getContentText())
       if(res_obj.code == 21610) return markStopped(event, is_fallback, parent_index,index); //this means they've replied 'STOP'
-      
+      markFailed(event,index)
       return debugEmail('Failed request to Twilio', 'Failed to send a request to Twilio\n\n' + phone_num + '\n' + '\n' + response.getResponseCode() + '\n' + response.getContentText()) //For now, let's see what parts actually give us errors, and which ones
 
     } else {
@@ -128,7 +128,7 @@ function queuePhone(index,parent_index,arr,code,message,fallback_str,cache, even
 
 
 //All email communications will go through GmailApp
-function processEmailObj(index, obj, cache, event, timestamp){
+function processEmailObj(index, obj, cache, event, timestamp, sf_object, comm_arr_size){
   try{
     
     if( ! obj.email ) throw new Error("Email object must have a recipient");
@@ -168,11 +168,12 @@ function processEmailObj(index, obj, cache, event, timestamp){
     if(attach_ids.length > 0){
       for(var i = 0; i < attach_ids.length; i++){
         var file = DriveApp.getFileById(attach_ids[i])
+        var pdf  = file.getAs('application/pdf')
         attachments.push(
           {
-            "filename":file.getAs('application/pdf').getName(),
+            "filename":pdf.getName(),
             "type": file.getMimeType(),
-            "content":Utilities.base64Encode(file.getAs('application/pdf').getBytes())
+            "content":Utilities.base64Encode(pdf.getBytes())
           }
         )
       }
@@ -183,12 +184,13 @@ function processEmailObj(index, obj, cache, event, timestamp){
     var recipient_arr = recipient.split(",")
     var any_success = false
     
-    var bcc = obj.bcc ? (obj.bcc + ((event.getOriginalCalendarId() == SECURE_CAL_ID) ? "," + SECURE_BCC_ADDR : "")) : SECURE_BCC_ADDR
+    var bcc = (sf_object.length == 0) ? (obj.bcc ? (obj.bcc + ((event.getOriginalCalendarId() == SECURE_CAL_ID) ? "," + SECURE_BCC_ADDR : "")) : SECURE_BCC_ADDR) : '' //if sf_object, dont bcc, otherwise do
 
     for(var i = 0; i < recipient_arr.length; i++){
       var response = sendEmail(subject, recipient_arr[i], body, attachments, from, name, from, obj.cc, bcc)
 
       if(response.errors){
+        web_app_record(['Error from SendGrid', "Event ID: " + event.getId(), response.errors])
         debugEmail('Error from SendGrid', "Event ID: " + event.getId() + "\n" + response.errors)
       } else {
         any_success = true
@@ -198,6 +200,9 @@ function processEmailObj(index, obj, cache, event, timestamp){
             
     if(any_success){
       event.setTitle("EMAILED " + event.getTitle().replace('LOCKED ',''))
+      if((sf_object.length > 0) && (comm_arr_size == 2)){ //if theres just the email + sf object, use that here, otherwise itll be added later
+            markSuccess(event,null,null, sf_object)
+      }
     } else {
       markFailed(event,index)
       if(obj.fallbacks) processCommArr(obj.fallbacks, event, true, cache, index)
@@ -240,7 +245,7 @@ function processFaxObj(index,obj,cache, event, timestamp){
     
     if( ! obj.from ){
 
-      if(event.getOriginalCalendarId() == SECURE_CAL_ID){ //TODO: find a cleary way to store this default in calendar itself. current issue is that cal.getname pulls name as saved in original account. maybe in description?
+      if(event.getOriginalCalendarId() == SECURE_CAL_ID){ 
         from = SECURE_DEFAULT_FAX_FROM
       } else {
         from = INSECURE_DEFAULT_FAX_FROM
@@ -270,7 +275,7 @@ function processFaxObj(index,obj,cache, event, timestamp){
     
     if(all_sent){
       
-      event.setTitle("FAXED " + event.getTitle())
+      event.setTitle("FAXED " + event.getTitle()) //TODO and add SF comm object
       
     } else {
       

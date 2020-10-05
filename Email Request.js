@@ -1,4 +1,4 @@
-function sendEmail(subject, recipient, body, attachments, from, from_name, reply_to, cc, bcc){
+function sendEmail(subject, to, body, attachments, from, from_name, reply_to, cc, bcc){
   
   var headers = {
     "Authorization" : "Bearer "+ SENDGRID_KEY, 
@@ -8,16 +8,9 @@ function sendEmail(subject, recipient, body, attachments, from, from_name, reply
   //Declare with all the required params
   var body =
   {
-    "personalizations": [
-      {
-        "to": [
-          {
-            "email": recipient,
-          }
-        ],
-        "subject": subject,
-      }
-    ],
+    "personalizations": [{
+      "subject":subject
+    }],
       
     "from": {
       "email": from,
@@ -37,6 +30,7 @@ function sendEmail(subject, recipient, body, attachments, from, from_name, reply
   
   //Then add optionals
   if(from_name) body.from.name = from_name
+  if(to) body.personalizations[0].to =[{"email": to}]
   if(cc) body.personalizations[0].cc = buildRecipientObj(cc.split(","))
   if(bcc) body.personalizations[0].bcc = buildRecipientObj(bcc.split(","))
   if(attachments.length > 0) body.attachments = attachments
@@ -47,8 +41,12 @@ function sendEmail(subject, recipient, body, attachments, from, from_name, reply
     'payload':JSON.stringify(body),
     'muteHttpExceptions' : true
   }
+  
+  var res = UrlFetchApp.fetch("https://api.sendgrid.com/v3/mail/send", options);
 
-  return UrlFetchApp.fetch("https://api.sendgrid.com/v3/mail/send",options);
+  web_app_record(["sendEmail", res, options])
+
+  return res
 }
 
 

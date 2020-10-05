@@ -4,18 +4,20 @@
 //Makes appropriate tagging of the calendar events to keep track
 function processQueuedEvent(comm_arr, event,cache){
   
+  var sf_object = extractSFObj(comm_arr)
+
   var title = event.getTitle()
   
-  handleInitialQueues(comm_arr, title, event,cache) //if one of the comm-objs in the description is queued
+  handleInitialQueues(comm_arr, title, event,cache, sf_object) //if one of the comm-objs in the description is queued
   
-  handleFallbacks(comm_arr, title, event,cache) //if one of the fallbacks nested within, is queued
+  handleFallbacks(comm_arr, title, event,cache, sf_object) //if one of the fallbacks nested within, is queued
   
 }
 
 
 //Given indexes of comm-objects to look at in the comm_arr, checks their progress
 //and tags or reprocesses appropriately
-function handleInitialQueues(comm_arr, title,event,cache){
+function handleInitialQueues(comm_arr, title,event,cache, sf_object){
     
   var initial_queues = extractQueuedTags(title) //indexes within comm_arr that need to be checked
 
@@ -25,7 +27,7 @@ function handleInitialQueues(comm_arr, title,event,cache){
       
       var obj = comm_arr[index]
 
-      if(obj.sms || obj.call) handleTwilioObjects(index,obj, event,cache)
+      if(obj.sms || obj.call) handleTwilioObjects(index,obj, event,cache, sf_object)
      
   }
 }
@@ -33,7 +35,7 @@ function handleInitialQueues(comm_arr, title,event,cache){
 
 //Givne indexes of comm-obj (parent-fallback), checks them all
 //and tags appropriately
-function handleFallbacks(comm_arr, title,event,cache){
+function handleFallbacks(comm_arr, title,event,cache, sf_object){
   var fallbacks_to_check = extractFallbackTags(title)
 
   for(var i = 0; i < fallbacks_to_check.length; i++){
@@ -46,7 +48,7 @@ function handleFallbacks(comm_arr, title,event,cache){
     
     var obj = fallbacks[indexes[1]]
 
-    if(obj.sms || obj.call) handleTwilioObjects(fallbacks_to_check[i],obj, event,cache) 
+    if(obj.sms || obj.call) handleTwilioObjects(fallbacks_to_check[i],obj, event,cache, sf_object) 
     
   }
 }
@@ -54,7 +56,7 @@ function handleFallbacks(comm_arr, title,event,cache){
 
 //Handles taking an object, and making appropriate calls to Twilio
 //Checking results, and tagging appropriately and/or calling processCommArr on fallbacks
-function handleTwilioObjects(index,obj, event,cache){
+function handleTwilioObjects(index,obj, event,cache, sf_object){
     
   var code = obj.sms ? 'sms' : 'call'
   
@@ -100,7 +102,7 @@ function handleTwilioObjects(index,obj, event,cache){
   }
   
   if(any_success){
-    markSuccess(event,index,code)
+    markSuccess(event,index,code, sf_object) 
   }
   
 }

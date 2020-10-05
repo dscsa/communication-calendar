@@ -2,6 +2,50 @@ function sleepme(){
   Utilities.sleep(10000)
 }
 
+function testDebugEmail() {
+  return debugEmail('testDebugEmailSubject','testDebugEmailBody')
+}
+
+function testCals(){
+  var cals = CalendarApp.getAllCalendars();
+  for(var n in cals){
+    Logger.log(' calendar ID = '+cals[n].getId()+'\nName = '+cals[n].getName()+'\n')
+  }
+}
+
+function testWebApp() {
+  var payload = {}
+  
+  payload['title'] = "V1 Individual Donation Email: Adam5 Kircher"
+  payload['send_now'] = 1
+  payload['password'] = 'Stanf0rd'
+  payload['body'] = [
+    {
+      "blobs":[
+        "Adam5 Kircher_09-09-2020_label.pdf",
+        "Adam5 Kircher_09-09-2020_manifest.pdf"
+      ],
+      "email":"adam.kircher@gmail.com",
+      "message":"<!DOCTYPE html PUBLIC Adam \"-\/\/W3C\/\/D TD HTML 4.01\/\/EN\" \"http:\/\/www.w3.org\/TR\/html4\/strict.dtd\">\n<html>\n<head>\n  <meta http-equiv\=\"Content-Type\" content=\"text\/html; charset=UTF-8\">\n  <meta http-equiv\=\"Content-Style-Type\" content=\"text\/css\">\n  <style type=\"text\/css\">\n    a { text-decoration: none; color: #1088d1 }\n    a:hover { text-decoration: underline; color: #1088d1 }\n    img { border: 0px; }\n<\/style>\n<\/head>\n<body width=\"100%\" style=\"background-color: #545454; line-height: 20.0px; font-family:Lucida Sans\">\n<table width=\"700.0\"  style=\"padding:10px 30px;\" cellspacing=\"0\" cellpadding=\"0\">\n  <tbody>\n    <tr>\n      <td>\n\n        <table style=\"margin:0px; padding:0px; background-color:#FFFFFF;\" width=\"700.0\" cellspacing=\"0\" cellpadding=\"0\">\n          <tbody>\n            <tr>\n              <td style=\"padding:10px 0px 5px 15px; line-height: 20.0px; font-size: 15.0px;\">Hi Adam5 Kircher,<\/td>\n              <td align=\"right\" style=\"width:181px; padding:10px 15px 5px 0px;\">\n\t\t\t\t\t\t<img style=\"height:25px\" src=\"https:\/\/donate.sirum.org\/images\/SIRUM_Logo.png\" alt=\"\"\/>\t\t\t\t  <\/td>\n      <\/tr>\n            <tr>\n              <td style=\"padding: 0px 15px; font-size:13px;\" colspan=\"2\" valign=\"top\">Thank you Adam5 Kircher! To complete your donation:<br><br>\n\t1. Print the attached shipping label and donation manifest<br>\n\t2. Place the manifest inside the box and tape the shipping label to the outside.<br>\n\t3. Seal the box and <a href=\"https:\/\/local.fedex.com\/GA\/Atlanta\/\" class=\"\">drop it off at the nearest FedEx pickup location<\/a><br>\n\t4. Keep this email and two attachments for your records<br><br>\n\tIf any of your medications are not eligible for donation, please dispose of them properly. Please drop them off at a <a href=\"https:\/\/apps2.deadiversion.usdoj.gov\/pubdispsearch\/spring\/main?execution=e1s1\" class=\"\">local collection site<\/a>.\n  If there is not a convenient collection site and the medications are not controlled substances, you can also dispose of them yourself: simply cross off your information from the prescription bottle, mix the medicine with something unappetizing (such as coffee grounds or kitty litter), and place it into your household trash.<br>\n\t<a href=\"https:\/\/www.fda.gov\/drugs\/safe-disposal-medicines\/disposal-unused-medicines-what-you-should-know\" class=\"\">Learn more about proper disposal from the FDA<\/a><br><\/td>\n            <\/tr>\n            <tr>\n              <td style=\"padding: 10px 15px 15px 15px; font-size:13px;\">Saving Medicine : Saving Lives<br><strong>The SIRUM Team<\/strong><\/td>\n              <td><\/td>\n            <\/tr>\n          <\/tbody>\n        <\/table>\n\n        <table style=\"margin:0px; padding:0px;\" width=\"700.0\" cellspacing=\"0\" cellpadding=\"0\">\n          <tbody>\n        <tr>\n              <td style=\"line-height:12px; font:9px Geneva; color:#999999; padding:5px 0px;\"> 2020 SIRUM, a 501(c)3 non-profit born at Stanford University<\/td>\n    <\/tr>\n          <\/tbody>\n        <\/table>\n\n      <\/td>\n    <\/tr>\n  <\/tbody>\n<\/table>\n<\/body>\n<\/html>\n",
+      "workHours":false,
+      "from":"support@sirum.org",
+      "subject":"Your SIRUM Donation Label"
+    }
+  ]
+                      
+                      
+  var options = {
+    'method' : 'post',
+    'muteHttpExceptions':true,
+    'payload' : JSON.stringify(payload)       
+  };
+                                          
+  var res = UrlFetchApp.fetch('https://script.google.com/a/sirum.org/macros/s/AKfycbxGd4CIQHDTYuj2Jm0QxEJdL_Xzk1mHZHVNWOvl3sRVgZwjxZY/exec', options);  
+  Logger.log(['Test Web App', res, options])
+  web_app_record(["Test Web App", options.payload, Utilities.base64Encode(options.payload)])
+
+}
+
 function testNewCache(){
 
  var str = '--'
@@ -83,7 +127,8 @@ function timingTest(){
 function testCreateEvent(){
   var start = new Date()
   var test_location = "peace and blessings"
-  CalendarApp.getCalendarById(CALENDAR_ID).createEvent("Test Event for Twilio Integration", start, new Date(start.getTime() + (60*1000)), {location:TEST_NUM, description:test_location})
+  Logger.log(JSON.stringify(CalendarApp.getAllCalendars()))
+  CalendarApp.getCalendarById(SECURE_CAL_ID).createEvent("Test Event for Twilio Integration", start, new Date(start.getTime() + (60*1000)), {location:'Location', description:test_location})
 }
 
 

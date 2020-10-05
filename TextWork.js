@@ -89,7 +89,7 @@ function cleanCallMessage(raw, cache) {
         .replace(/<Pause(.*?)>/ig,"</Say><Pause$1><Say>")
         .replace(/<Pause([^\/>]*?)>/ig,"<Pause$1/>")
         .replace(/<Say><\/Say>/g, '')
-        .replace(/<u>/g,'').replace(/<\/u>/g,'') //todo: other style tags we need to remove?
+        .replace(/<u>/g,'').replace(/<\/u>/g,'') 
 
   clean = handlePlayTag(clean,cache)
 
@@ -175,7 +175,7 @@ function extractNameFromEvent(title){
     if(res == null) return ""
   }
   
-  return res[1].trim();
+  return res[1].replace('*', '').trim(); //* CK note to verify address
 }
 
 

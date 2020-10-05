@@ -1,7 +1,6 @@
 //Seemed that sometimes the URL returned from .getUrl didn't quite work with that tag.
 //Most likely seems related to general frailty of webApp. For now, works, but worth monitoring
 function getWebAppUrl(){
-  //TODO: how can this be dynamic?
   return WEB_APP_URL //ScriptApp.getService().getUrl().replace("/a/sirum.org","").replace("exec", "dev")
 }
 
@@ -70,7 +69,7 @@ function handleTwilioError(phone_num,error_code){
       sendSms(toContact[i], emergency_notif)    // send an sms to one of us about this
     }
 
-    if(~ PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) return; //TODO: delete this in the long term, should just freeze anytime, especially if it hits an error internally
+    if(~ PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) return; 
 
     putHoldOnCalls()
   }

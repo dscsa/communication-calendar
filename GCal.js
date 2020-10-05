@@ -17,54 +17,45 @@ function calendarCopier(){
 
 
 
-//Only use for transition from old GCal to new one
-//run every morning to sync up our calendars
-//Set to trigger, but should be removed eventually. Will be pinging me until then
-//On 11/22/19 AS disabled the trigger for this
-function syncCals(){
-  return //TODO if ever needed, remove this. adding to be super sure
-  MailApp.sendEmail("omar@sirum.org", "Check that the calendar syncing is working", "")
-  
-  var old_cal = CalendarApp.getCalendarById("sirum.org_k8j983q66k1t6gvgg59t0amq0k@group.calendar.google.com")
-  var new_cal = CalendarApp.getCalendarById(SECURE_CAL_ID)
-  
-  
-  var start = new Date();
-  start.setHours(0,0,0,0); //set to all zeroes
-  
-  var end = new Date();
-  end.setHours(23,59,59,999);
-  
-  var events_to_copy = old_cal.getEvents(start, end)
-  
-  for(var i = 0; i < events_to_copy.length; i++){
-    new_cal.createEvent(events_to_copy[i].getTitle(), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
-    if(i % 20 == 0) Utilities.sleep(2000)
-  }
-}
-
 
 
 
 function markFailed(event,index){
   var title = event.getTitle() //mark that it failed on whichever mode of contact
-  title = title.replace('QUEUED-' + index, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
-  //title = title.replace('QUEUED-' + index, '') //note that the first one failed
+  var rx = new RegExp('QUEUED-' + index, 'g')
+  title = title.replace(rx, 'FAILED-' + index) //note that the parent object failed, can be commented out and replaced with line below
   event.setTitle(title)
 }
 
 
-function markSuccess(event,index,code){
-  var title = event.getTitle()
-  Logger.log(title)
-  var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
+function markSuccess(event,index,code, sf_object){
+  var title = event.getTitle()  
+  var rx = new RegExp('QUEUED-' + index, 'g')
+  title = title.replace(rx, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
   
-  title = title.replace('QUEUED-' + index, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
+
+  var separator = '---SFOBJECT---' //just has to sync with Salesforce
+  
+  if(sf_object){
+    if((sf_object.length > 0) && !(~ event.getDescription().indexOf(separator))){
+      
+      event.setDescription(sf_object + "\n\n" + separator + "\n\n" + event.getDescription())
+      
+      if(~ title.indexOf('LOCKED')){
+        title = title.replace(/LOCKED/g,'SF ')
+      } else if(!(~ title.indexOf('SF '))){
+        title = 'SF ' + title
+      }
+      
+    }
+  } else {
+    console.log(contact_name)
+    var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
+    event.setLocation(contact_name) //this is for the OLD magic, eventually need to remove all together
+  }
   
   event.setTitle(title)
-  Logger.log(contact_name)
-  event.setLocation(contact_name) //useful for our salesforce integration
-  
+
 }
 
 
@@ -104,7 +95,10 @@ function getEventsToQueue(calendar_id, startTimeDate){
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf('LOCKED') || ~ title.indexOf("TEXTED") || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
+    
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf('LOCKED') || ~ title.indexOf("TEXTED") || ~ title.indexOf("SF ") 
+    || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") || ~ title.indexOf("FAILED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
+    
     if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()){
       console.log('locking event: ' + raw_events[i].getTitle())
       try{
