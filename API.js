@@ -21,6 +21,8 @@ function _doPost(e) {
  //content ourselves
   //web_app_record(["START - received post request", e.postData, e.parameter])
   //debugEmail('test _doPost', JSON.stringify(e.parameter))
+
+  console.log(JSON.stringify(e))
   
   if (e.postData) {
     var request = e.postData.contents  

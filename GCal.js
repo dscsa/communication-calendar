@@ -33,6 +33,7 @@ function markSuccess(event,index,code, sf_object){
   var rx = new RegExp('QUEUED-' + index, 'g')
   title = title.replace(rx, (code == 'sms' ? 'TEXTED ' : 'CALLED '))
   
+  var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
 
   var separator = '---SFOBJECT---' //just has to sync with Salesforce
   
@@ -49,12 +50,13 @@ function markSuccess(event,index,code, sf_object){
       
     }
   } else {
-    console.log(contact_name)
-    var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
+    
     event.setLocation(contact_name) //this is for the OLD magic, eventually need to remove all together
   }
   
   event.setTitle(title)
+  
+  console.log('markSuccess: title:'+title+' contact:'+contact_name+' index:'+index+' code:'+code+' sf_object:'+!!sf_object)
 
 }
 
