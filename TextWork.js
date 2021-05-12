@@ -1,3 +1,16 @@
+function translateString(string, sourceLanguage, targetLanguage, contentType) {
+  contentType = contentType || 'text'
+  if (sourceLanguage == targetLanguage || !sourceLanguage || !targetLanguage) {
+    return string
+  }
+  try {
+    return LanguageApp.translate(string, sourceLanguage, targetLanguage, { contentType: contentType })
+  } catch(e) {
+    debugEmail('Failure to translate ' + string + ' from ' + sourceLanguage + ' to ' + targetLanguage, JSON.stringify(e))
+    return string
+  }
+}
+
 //Because cal event description is url-encoded, gotta clean it up a bit
 function decodeDescription(raw){
 
@@ -19,7 +32,7 @@ function decodeDescription(raw){
   var clean4 = clean3.replace(/’/g, "'")
 
   // Remove <br> AND \n AND whitespace that are not in quotes which are added by google calendar if user hand edits a google calendar json description
-  var clean5 = clean4.replace(/(<br>|\n|\s)(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
+  var clean5 = clean4.replace(/(<br>|\n|&nbsp;|\s)(?=(?:(?:\\.|[^"\\])*"(?:\\.|[^"\\])*")*(?:\\.|[^"\\])*$)/g, '') //https://stackoverflow.com/questions/11502598/how-to-match-something-with-regex-that-is-not-between-two-special-characters
 
   //Hand edit of calendar can cause "control characters" to be added by Google
   //https://stackoverflow.com/questions/4253367/how-to-escape-a-json-string-containing-newline-characters-using-javascript
@@ -73,16 +86,33 @@ function decodeEntities(encodedString) {
     })*/
 }
 
-function cleanTextMessage(raw,cache){
+function cleanTextMessage(raw, sourceLanguage, targetLanguage){
 
   var clean = raw.replace(/<.*?>/g,' ') //remove any html style tagging, or twiml
+  clean = translateString(clean, sourceLanguage, targetLanguage)
 
   return clean
 }
 
 
+function say(text, sourceLanguage, targetLanguage) {
+  sourceLanguage = sourceLanguage || 'en'
+  var language = targetLanguage || 'en'
+  if (language == 'es') {
+    language = 'es-MX'
+  } else if (language == 'en') {
+    language = 'en-US'
+  } else if (language) {
+    language = language + '-' + language.toUpperCase()
+  }
+  text = translateString(text, sourceLanguage, targetLanguage);
+  return '<Say voice="alice" language="' + language + '">' + text + '</Say>'
+}
+
 //when handling phone calls, need to take the text and process into appropriate TwiML befoer sending
-function cleanCallMessage(raw, cache) {
+function cleanCallMessage(raw, cache, sourceLanguage, targetLanguage) {
+  sourceLanguage = sourceLanguage || 'en'
+  targetLanguage = targetLanguage || 'en'
 
   var clean = raw.replace(/<play(.*?)>/ig,"</Say><Play$1>")
         .replace(/<\/play(.*?)>/ig,"</Play$1><Say>")
@@ -92,14 +122,12 @@ function cleanCallMessage(raw, cache) {
         .replace(/<u>/g,'').replace(/<\/u>/g,'') 
 
   clean = handlePlayTag(clean,cache)
-
-
+  clean = say(clean, sourceLanguage, targetLanguage)
   console.log('cleanPhoneMessage: raw: '+raw+'\n\n clean:'+clean)
 
-  //repeat message 3x
-  var toRepeat = '</Say><Pause length="2"/><Say>This is an automated message. You can now hang up. This messsage will now repeat if you need to hear it again.</Say><Pause length="4"/><Say>'
-  clean = clean + toRepeat + clean +  '</Say><Pause length="2"/><Say>Good Bye'
-  clean = '<?xml version="1.0" encoding="UTF-8"?><Response><Say>' + clean + '</Say></Response>'
+  //repeat message 2x
+  var toRepeat = '<Pause length="2"/>' + say("This is an automated message. You can now hang up. This messsage will now repeat if you need to hear it again.", sourceLanguage, targetLanguage) + '<Pause length="4"/>'
+  clean = '<?xml version="1.0" encoding="UTF-8"?><Response>' + clean + toRepeat + clean + '<Pause length="2"/>' + say('Good Bye', sourceLanguage, targetLanguage) + '</Response>'
 
   return clean
 }
@@ -185,7 +213,7 @@ function eventString(events) {
   return events.reduce ? events.reduce(reduce,'') : reduce('', events)
 
   function reduce(s, event) {
-    return s+event.getStartTime()+': '+event.getTitle()+', '+event.getDescription()+'; '
+    return s+event.getEndTime()+': '+event.getTitle()+', '+event.getDescription()+'; '
   }
 }
 

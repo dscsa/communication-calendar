@@ -53,11 +53,11 @@ function processPhoneObject(index,parent_index,obj,cache, event, timestamp, is_f
     var call_arr = obj.call ? obj.call.toString().split(",") : []
     var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
     
-    var text_message_content = cleanTextMessage(message_content,cache)
-    
+    var text_message_content = cleanTextMessage(message_content,'en', obj.language)
+
     queuePhone(index,parent_index, sms_arr, 'sms', text_message_content, fallbacks, cache, event, timestamp, is_fallback, spam_limit)
 
-    var call_message_content = cleanCallMessage(message_content,cache)
+    var call_message_content = cleanCallMessage(message_content,cache, 'en', obj.language)
 
     queuePhone(index,parent_index, call_arr, 'call', call_message_content, fallbacks, cache, event, timestamp, is_fallback)
         
@@ -145,6 +145,11 @@ function processEmailObj(index, obj, cache, event, timestamp, sf_object, comm_ar
     var subject = obj.subject
     var body = obj.message
     var spam_limit = obj.spamLimit? obj.spamLimit : CONTACTS_CAP
+
+    if (obj.language) {
+      subject = translateString(subject, 'en', obj.language)
+      body = translateString(body, 'en', obj.language, 'html')
+    }
 
     if(wouldSpam("#email#",recipient, body, cache, timestamp, spam_limit)){
       spamTagCal(event)
