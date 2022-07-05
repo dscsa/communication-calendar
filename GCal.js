@@ -1,7 +1,7 @@
 //Only called from the test sheet -> copies events from the live calendar into 
 //the test cal so that we can fully test without interfering
 function calendarCopier(){
-  var live_cal = CalendarApp.getCalendarById(SECURE_CAL_ID)
+  var live_cal = CalendarApp.getCalendarById(PHARMACY_APP_CAL_20220301)
   var test_cal = CalendarApp.getCalendarById(TEST_CAL_ID)
   
   var now = new Date();
@@ -9,8 +9,8 @@ function calendarCopier(){
   var events_to_copy = live_cal.getEvents(oneMinuteBack, now)
   
   for(var i = 0; i < events_to_copy.length; i++){
-    if(events_to_copy[i].getStartTime().getTime() >= oneMinuteBack.getTime()){
-      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED|FAXED/g,''), events_to_copy[i].getStartTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
+    if(events_to_copy[i].getEndTime().getTime() >= oneMinuteBack.getTime()){
+      test_cal.createEvent(events_to_copy[i].getTitle().replace(/TEXTED|CALLED|EMAILED|FAXED/g,''), events_to_copy[i].getEndTime(), events_to_copy[i].getEndTime(), {description: events_to_copy[i].getDescription()})
     }
   }
 }
@@ -35,6 +35,7 @@ function markSuccess(event,index,code, sf_object){
   
   var contact_name = extractNameFromEvent(title) //will return either the name-dob format, or empty string
 
+  /*
   var separator = '---SFOBJECT---' //just has to sync with Salesforce
   
   if(sf_object){
@@ -53,6 +54,7 @@ function markSuccess(event,index,code, sf_object){
     
     event.setLocation(contact_name) //this is for the OLD magic, eventually need to remove all together
   }
+  */
   
   event.setTitle(title)
   
@@ -86,22 +88,22 @@ function markStopped(event){
 
 
 //Get events that haven't yet been touched, and will need to be queued up
-function getEventsToQueue(calendar_id, startTimeDate){
+function getEventsToQueue(calendar_id, endTimeDate){
 
   var calendar = CalendarApp.getCalendarById(calendar_id)
   var now = new Date();
 
-  var raw_events = calendar.getEvents(startTimeDate, now); //gets all events that OCCURED between startimedate and now
+  var raw_events = calendar.getEvents(endTimeDate, now); //gets all events that OCCURED between endTimeDate and now
 
   var res = []
 
   for(var i = 0; i < raw_events.length; i++){
     var title = raw_events[i].getTitle()
     
-    if( ~ title.indexOf("EMAILED") || ~ title.indexOf('LOCKED') || ~ title.indexOf("TEXTED") || ~ title.indexOf("SF ") 
+    if( ~ title.indexOf("EMAILED") || ~ title.indexOf('LOCKED') || ~ title.indexOf("TEXTED")
     || ~ title.indexOf("CALLED")|| ~ title.indexOf("FAXED") || ~ title.indexOf("QUEUED") || ~ title.indexOf("FAILED") ||  ~ title.indexOf("STOPPED")) continue; //don't reprocess a tagged event
     
-    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()){
+    if(raw_events[i].getEndTime().getTime() >= endTimeDate.getTime()){
       console.log('locking event: ' + raw_events[i].getTitle())
       try{
         markLocked(raw_events[i]) //mark it as locked now so we don't touch it again if this run takes more than one minute
@@ -121,12 +123,12 @@ function getEventsToQueue(calendar_id, startTimeDate){
 
 //Get events that have been queued and either need a fallback processed,
 //or they need to be tagged as done
-function getQueuedEvents(calendar_id, startTimeDate){
+function getQueuedEvents(calendar_id, endTimeDate){
 
   var calendar = CalendarApp.getCalendarById(calendar_id)
   var now = new Date();
 
-  var raw_events = calendar.getEvents(startTimeDate, now); //gets all events that OCCURED between startimedate and now
+  var raw_events = calendar.getEvents(endTimeDate, now); //gets all events that OCCURED between startimedate and now
 
   var res = []
 
@@ -134,7 +136,7 @@ function getQueuedEvents(calendar_id, startTimeDate){
     var title = raw_events[i].getTitle()
     if( ~ title.indexOf('STOPPED')) continue;
     if( !(~ title.indexOf('QUEUED'))) continue;
-    if(raw_events[i].getStartTime().getTime() >= startTimeDate.getTime()) res.push(raw_events[i])
+    if(raw_events[i].getEndTime().getTime() >= endTimeDate.getTime()) res.push(raw_events[i])
   }
 
   return res
@@ -199,3 +201,4 @@ function inLiveHours(){
   var hour = now.getHours()
   return ((hour >= LIVE_SOD) && (hour < LIVE_EOD))
 }
+

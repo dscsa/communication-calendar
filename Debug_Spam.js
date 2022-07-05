@@ -2,12 +2,12 @@
 //Key issue: not wasting our quota on debug emails
 function debugEmail(subject,body){
   var quota = MailApp.getRemainingDailyQuota() //how many more emails can we afford to send
-
+  
   if (quota < 200) { //if we're near our quota limit, don't send another email, just log
     return console.log({"issue":'approaching email quota, remaining: ' + quota, "subject":subject,"body":body})
   }
 
-  MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, subject,body)
+  MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, subject.slice(0, 250),subject+' '+body)
 }
 
 
@@ -92,3 +92,4 @@ function sendSpamAlertEmail(msg_history, addr){
   alertEmail += msg_history
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, 'Stop Spam', '', {htmlBody: alertEmail})
 }
+

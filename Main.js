@@ -23,13 +23,24 @@ function main(){
     
     var queueTimeSpan = new Date(now.getTime() - (MINUTES_BACK_FOR_QUEUE * 60 * 1000));
 
-    processEvents(SECURE_CAL_ID, oneMinuteBack,queueTimeSpan)
-    Logger.log("Checking Insecure Calendar")
-    processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan) //for Bertha stuff
-    Logger.log("checking thunder calendar")
-    processEvents(THUNDER_CAL_ID,fifteenMinutesBack,queueTimeSpan)  //TODO activate this
+    Logger.log("Checking PHARMACY_APP_CAL_20220301")
+    processEvents(PHARMACY_APP_CAL_20220301, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking SHIPMENTS_APP_CAL_20220610")
+    processEvents(SHIPMENTS_APP_CAL_20220610, oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking ZAPIER_COMMS_CAL_20220610")
+    processEvents(ZAPIER_COMMS_CAL_20220610, oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking THUNDER_CAL_ID")
+    processEvents(THUNDER_CAL_ID,fifteenMinutesBack,queueTimeSpan)
+    
+    //THIS IS DEPRECATED. REMOVE THIS ONCE NOTHING IS WRITING TO IT ANY MORE
+    Logger.log("Checking INSECURE_CAL_ID")
+    processEvents(INSECURE_CAL_ID,oneMinuteBack,queueTimeSpan) //OLD Bertha stuff, replaced by Shipments_App_Cal 
 
   } catch (e) {
+    Logger.log('error: '+e.message+' '+e.stack)
     debugEmail('main','error: '+e.message+' '+e.stack)
     console.log('main error: '+e.message+' '+e.stack)
   }
@@ -58,7 +69,7 @@ function testMain(){
 //Looks to one of the calendars under this account to find events that need processing
 //and those that need to be checked
 //set up with this api (of having the times as parameterrs) so that it can be more easy to test
-//by having a consistent startTime
+//by having a consistent endTime
 function processEvents(calendar_id, timeToQueue, timeAlreadyQueued){
 
   var events_to_queue = getEventsToQueue(calendar_id, timeToQueue)
@@ -104,3 +115,4 @@ function coordinateProcessing(code,arr_events,cache){
 
   }
 }
+

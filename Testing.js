@@ -1,3 +1,8 @@
+function test() {
+  var live_cal = CalendarApp.getCalendarById()
+  Logger.log(['test', live_cal])
+}
+
 function sleepme(){
   Utilities.sleep(10000)
 }
@@ -162,3 +167,4 @@ function playAudio(){
   
   Logger.log(sendCall(TEST_NUM));
 }
+

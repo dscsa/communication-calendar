@@ -25,7 +25,7 @@ function doGet(e) {
 
     twiML = getCustomErrorMessage() //return an error we can use
 
-    handleTwilioError(phone_num,request.ErrorCode)
+    handleTwilioError(phone_num,request)
 
   } else { //then just a regular request for twiML
 
@@ -40,9 +40,15 @@ function doGet(e) {
   }
 
   var resp = ContentService.createTextOutput(twiML)
-  resp.setMimeType(ContentService.MimeType.XML)
+  resp.setMimeType(ContentService.MimeType.TEXT) //.XML no longer seems to work https://stackoverflow.com/questions/71741700/suddenly-i-get-the-error-cannot-find-method-setmimetypeclass-without-any-ch
 
   return resp
+}
+
+function listMimeTypes() {
+  
+  console.log(Object.keys(ContentService.MimeType))
+  
 }
 
 
@@ -58,12 +64,14 @@ function getCustomErrorMessage(){
 
 //If we get an error from processing TwiML, need to stop making calls in case it's something that
 //will just keep repeating
-function handleTwilioError(phone_num,error_code){
+function handleTwilioError(phone_num,request){
+  
+  var error_code = request.ErrorCode
   
   if(error_code.toString() == '12100'){
     var emergency_notif = (~ PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) ? 'Action Required - Twilio parsing error on internal number' : 'URGENT ACTION REQUIRED - All calls paused - Twilio Unable to Parse our TwiML'
 
-    emergencyEmail(emergency_notif,'') //need to send an immediate email
+    emergencyEmail(emergency_notif, JSON.stringify(request)) //need to send an immediate email
     var toContact = PRODUCTION_SPAMPROOF_PHONE.split(",")
     for(var i = 0; i < toContact.length; i++){
       sendSms(toContact[i], emergency_notif)    // send an sms to one of us about this
@@ -71,7 +79,7 @@ function handleTwilioError(phone_num,error_code){
 
     if(~ PRODUCTION_SPAMPROOF_PHONE.indexOf(phone_num.trim())) return; 
 
-    putHoldOnCalls()
+    //putHoldOnCalls()
   }
   
 }
@@ -102,4 +110,5 @@ function holdCall(phone_num,cache){
 
   return cache.get('CALL-HOLD') ? true : false;
 }
+
 

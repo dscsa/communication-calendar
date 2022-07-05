@@ -40,6 +40,7 @@ function decodeDescription(raw){
     //.replace(/[\\]/g, '\\\\')
     .replace(/[\b]/g, '\\b')
     .replace(/[\f]/g, '\\f')
+    .replace(/[\r\n]/g, '\\n')
     .replace(/[\n]/g, '\\n')
     .replace(/[\r]/g, '\\r')
     .replace(/[\t]/g, '\\t');
@@ -239,3 +240,4 @@ function getAllMatches(rx,str){
   return res
 }
 //------------------------
+

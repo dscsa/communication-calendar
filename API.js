@@ -86,7 +86,7 @@ function _doPost(e) {
   
   if(request.send_now) title = "LOCKED " + title
   //TODO: if given a calendar_id should ping tht calendar and confirm we have access, otherwise throw error
-  var calendar_id = request.calendar_id ? request.calendar_id : (LIVE_MODE ? (request.send_now ? INSECURE_CAL_ID : SECURE_CAL_ID) : TEST_CAL_ID) //use provided, else use logic
+  var calendar_id = request.calendar_id ? request.calendar_id : (LIVE_MODE ? (request.send_now ? SHIPMENTS_APP_CAL_20220610 : PHARMACY_APP_CAL_20220301) : TEST_CAL_ID) //use provided, else use logic
   
   try {
     var cal = CalendarApp.getCalendarById(calendar_id)
@@ -97,7 +97,7 @@ function _doPost(e) {
     var created_event = cal.createEvent(title, start, end, {'description':string_event_body}) //we need an event for succes tagging, and just so we can track everything 
   
   } catch (e) {
-    var error = ['Create Event Failed', e, cal, created_event]
+    var error = ['Create Event Failed', e, calendar_id, cal, created_event]
     web_app_record(error)
     return response.setContent(JSON.stringify(error)).setMimeType(ContentService.MimeType.JSON)
   }
@@ -252,5 +252,6 @@ function getPwd(){
 function formatDateFull(date){
   return Utilities.formatDate(date, "GMT-" + (date.getTimezoneOffset() / 60) + ":00", 'yyyy-MM-dd HH:mm:ss').replace(" ","T") + '-0' + (date.getTimezoneOffset() / 60) + ":00"
 }
+
 
 

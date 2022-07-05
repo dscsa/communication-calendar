@@ -167,12 +167,18 @@ function processEmailObj(index, obj, cache, event, timestamp, sf_object, comm_ar
       from = raw_from.length  > 1 ? raw_from[1].replace(">","").trim() : raw_from[0].trim() 
     }
     
-    var attach_ids = obj.attachments ? obj.attachments : []
+    var attach_ids = obj.attachments ? obj.attachments.filter(function(a) { return a }) : [] //filter out falsey values
     var attachments = []
     
     if(attach_ids.length > 0){
       for(var i = 0; i < attach_ids.length; i++){
-        var file = DriveApp.getFileById(attach_ids[i])
+        
+        try {
+          var file = DriveApp.getFileById(attach_ids[i])
+        } catch (e) {
+          debugEmail('Error with Comm Cal Attachment', "Attachment ID: " + attach_ids[i] + "\ni" + i + "\nattach_ids" + JSON.stringify(attach_ids))
+          continue
+        }
         var pdf  = file.getAs('application/pdf')
         attachments.push(
           {
@@ -293,3 +299,4 @@ function processFaxObj(index,obj,cache, event, timestamp){
     debugEmail('Failure to process a Fax comm-object', JSON.stringify([e, obj]))
   }
 }
+
