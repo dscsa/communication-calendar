@@ -78,4 +78,3 @@ function fetchResource(sid,code){
   
   return UrlFetchApp.fetch(url, options)
 }
-

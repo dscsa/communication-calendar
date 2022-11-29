@@ -92,4 +92,3 @@ function sendSpamAlertEmail(msg_history, addr){
   alertEmail += msg_history
   MailApp.sendEmail(PRODUCTION_ERRORS_EMAIL, 'Stop Spam', '', {htmlBody: alertEmail})
 }
-

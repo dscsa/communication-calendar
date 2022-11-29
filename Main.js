@@ -26,8 +26,32 @@ function main(){
     Logger.log("Checking PHARMACY_APP_CAL_20220301")
     processEvents(PHARMACY_APP_CAL_20220301, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
     
+    Logger.log("Checking PHARMACY_APP_NO_RX_CAL_20220823")
+    processEvents(PHARMACY_APP_NO_RX_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_ORDER_CREATED_CAL_20220823")
+    processEvents(PHARMACY_APP_ORDER_CREATED_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_ORDER_DELIVERED_CAL_20220823")
+    processEvents(PHARMACY_APP_ORDER_DELIVERED_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_ORDER_LATE_CAL_20220823")
+    processEvents(PHARMACY_APP_ORDER_LATE_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_ORDER_SHIPPED_CAL_20220823")
+    processEvents(PHARMACY_APP_ORDER_SHIPPED_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_PATIENT_CAL_20220823")
+    processEvents(PHARMACY_APP_PATIENT_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PHARMACY_APP_OTHER_CAL_20220823")
+    processEvents(PHARMACY_APP_OTHER_CAL_20220823, oneMinuteBack,queueTimeSpan) //processEvents(PHARMACY_CAL_ID,  oneMinuteBack,queueTimeSpan)
+    
     Logger.log("Checking SHIPMENTS_APP_CAL_20220610")
     processEvents(SHIPMENTS_APP_CAL_20220610, oneMinuteBack,queueTimeSpan)
+    
+    Logger.log("Checking PATIENT_PORTAL_CAL_20220802")
+    processEvents(PATIENT_PORTAL_CAL_20220802, oneMinuteBack,queueTimeSpan)
     
     Logger.log("Checking ZAPIER_COMMS_CAL_20220610")
     processEvents(ZAPIER_COMMS_CAL_20220610, oneMinuteBack,queueTimeSpan)
@@ -115,4 +139,3 @@ function coordinateProcessing(code,arr_events,cache){
 
   }
 }
-

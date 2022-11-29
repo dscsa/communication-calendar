@@ -254,4 +254,3 @@ function formatDateFull(date){
 }
 
 
-

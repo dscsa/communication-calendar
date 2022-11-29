@@ -240,4 +240,3 @@ function getAllMatches(rx,str){
   return res
 }
 //------------------------
-
