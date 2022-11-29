@@ -50,4 +50,3 @@ function updateContactHistory(addr,contact_history,cache){
 
 
 
-

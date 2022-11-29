@@ -299,4 +299,3 @@ function processFaxObj(index,obj,cache, event, timestamp){
     debugEmail('Failure to process a Fax comm-object', JSON.stringify([e, obj]))
   }
 }
-

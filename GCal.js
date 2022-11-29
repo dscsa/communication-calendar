@@ -201,4 +201,3 @@ function inLiveHours(){
   var hour = now.getHours()
   return ((hour >= LIVE_SOD) && (hour < LIVE_EOD))
 }
-

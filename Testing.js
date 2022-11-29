@@ -167,4 +167,3 @@ function playAudio(){
   
   Logger.log(sendCall(TEST_NUM));
 }
-
